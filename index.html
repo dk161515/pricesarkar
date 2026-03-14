@@ -302,7 +302,16 @@ footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-ali
 //   ⚠️  PURANI KEY DELETE KARO — nai key banao!
 // ╚══════════════════════════════════════════════════════════════╝
 // =====================================================
-// 👇 SIRF YE LINE BADLO — APNI KEY YAHAN DAALO
+// 🔒 OPTION A — Cloudflare Worker (KEY SAFE REHTI HAI)
+//    Worker deploy karne ke baad Worker URL yahan daalo
+//    e.g. "https://pricesarkar.yourname.workers.dev"
+// =====================================================
+const WORKER_URL = "https://long-dream-35e5.dk161515ja.workers.dev/";
+
+// =====================================================
+// ⚠️  OPTION B — Direct Key (key visible hoti hai)
+//    Agar Worker nahi banaya to apni Groq key yahan
+//    WORKER_URL blank "" rakhna hoga
 // =====================================================
 const GROQ_API_KEY = "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";
 // =====================================================
@@ -394,8 +403,8 @@ function clearInput() {
 }
 function detectSource(url) {
   if(!url) return "Unknown";
-  if(url.includes("amazon")) return "Amazon";
-  if(url.includes("flipkart")) return "Flipkart";
+  if(url.includes("amazon") || url.includes("amzn")) return "Amazon";
+  if(url.includes("flipkart") || url.includes("fkrt")) return "Flipkart";
   if(url.includes("meesho")) return "Meesho";
   if(url.includes("myntra")) return "Myntra";
   if(url.includes("jiomart")) return "JioMart";
@@ -412,39 +421,119 @@ async function doCompare() {
     return;
   }
 
+
+
   const key = (GROQ_API_KEY || "").trim();
+  const workerSet = WORKER_URL && WORKER_URL !== "YAHAN_WORKER_URL_DAALO";
+  if (!workerSet && !key) { showError("⚠️ WORKER_URL ya GROQ_API_KEY mein se koi ek daalna zaroori hai."); return; }
 
   const t = TR[currentLang];
   show("loaderSection"); hide("resultsSection"); hide("errorBox"); hide("howSection");
   document.getElementById("loaderTxt").innerHTML = t.loaderTxt + ' <span class="dot-pulse"><span></span><span></span><span></span></span>';
   document.getElementById("compareBtn").disabled = true;
 
-  const prompt = `You are an Indian e-commerce price comparison assistant.
-Given a product URL, generate estimated price comparisons across Amazon India, Flipkart, Meesho, Myntra, and JioMart.
-These are AI-estimated prices for comparison only.
+  // URL se basic hints
+  const urlLower = url.toLowerCase();
+  let urlHint = "";
+  if (urlLower.includes("laptop") || urlLower.includes("notebook") || urlLower.includes("macbook")) urlHint = "LAPTOP";
+  else if (urlLower.includes("phone") || urlLower.includes("mobile") || urlLower.includes("iphone") || urlLower.includes("galaxy-s") || urlLower.includes("galaxy-a") || urlLower.includes("redmi") || urlLower.includes("realme")) urlHint = "SMARTPHONE";
+  else if (urlLower.includes("tablet") || urlLower.includes("ipad")) urlHint = "TABLET";
+  else if (urlLower.includes("headphone") || urlLower.includes("earphone") || urlLower.includes("earbuds") || urlLower.includes("airpods") || urlLower.includes("airdopes")) urlHint = "EARBUDS/HEADPHONE";
+  else if (urlLower.includes("tv") || urlLower.includes("television")) urlHint = "TELEVISION";
+  else if (urlLower.includes("watch") || urlLower.includes("smartwatch")) urlHint = "SMARTWATCH";
+  else if (urlLower.includes("shirt") || urlLower.includes("tshirt") || urlLower.includes("dress") || urlLower.includes("jeans") || urlLower.includes("kurta") || urlLower.includes("saree")) urlHint = "CLOTHING";
+  else if (urlLower.includes("shoe") || urlLower.includes("sneaker") || urlLower.includes("sandal") || urlLower.includes("chappal")) urlHint = "FOOTWEAR";
 
-Return ONLY valid JSON with no markdown or backticks:
-{"detectedProduct":"Samsung Galaxy S24 128GB","summary":"buying advice in Hindi-English mix","bestDeal":"site name","searchQuery":"search query","products":[{"site":"Amazon","title":"full title","price":45999,"originalPrice":54999,"discount":16,"rating":4.4,"reviews":12847,"badge":"Best Seller","highlights":["feature1","feature2","feature3"],"inStock":true,"delivery":"Free delivery in 2 days"}]}
+  // URL path se product words nikalo
+  let urlProductName = "";
+  try {
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split("/").filter(p =>
+      p && p.length > 2 &&
+      !p.match(/^[A-Z0-9]{10}$/) &&
+      !["dp","d","p","product","buy","ip","itm","s","ref"].includes(p)
+    );
+    urlProductName = pathParts.join(" ").replace(/[-_]/g, " ").trim().substring(0, 200);
+  } catch(e) {}
 
-Rules: 5-8 products total, realistic INR prices, skip irrelevant sites (no electronics on Myntra), vary prices 3-15%.
-Badge options: "Best Seller","Deal of Day","Trending","Top Rated","Budget Pick","Official Store",""
+  const prompt = `You are a smart Indian e-commerce product comparison assistant.
 
-URL: ${url}
-Source: ${detectSource(url)}`;
+USER TASK: Find the EXACT product from this URL and show it across ALL Indian shopping platforms.
+
+Product URL: ${url}
+Source Platform: ${detectSource(url)}
+URL path text: "${urlProductName}"
+Category hint: ${urlHint || "identify from URL"}
+
+=== YOUR JOB ===
+STEP 1: Identify the EXACT product
+- Read URL path words carefully: brand, model, variant, color, storage etc
+- Example URL path "boAt-Airdopes-141-bluetooth" → product is "boAt Airdopes 141 Bluetooth Earbuds"
+- Example URL path "Samsung-Galaxy-M34-5G" → product is "Samsung Galaxy M34 5G Smartphone"  
+- Example URL path "HP-Pavilion-15-Laptop-Intel" → product is "HP Pavilion 15 Laptop"
+- If short URL with no path info → use category hint
+
+STEP 2: Show THIS SAME EXACT product on all relevant platforms
+- Amazon, Flipkart: almost always available
+- Meesho: only for clothing, accessories, home decor, small items
+- Myntra: only for clothing, footwear, fashion accessories
+- JioMart: grocery, FMCG, some electronics
+
+STEP 3: Return realistic prices for THIS specific product
+
+Return ONLY valid JSON, no markdown, no backticks:
+{
+  "detectedProduct": "Exact product: Brand + Model + Key Specs (e.g. boAt Airdopes 141 v2 Bluetooth Earbuds Black)",
+  "summary": "Hindi-English mein: konsi site pe yahi product sabse sasta hai aur kitne ka hai",
+  "bestDeal": "site name",
+  "searchQuery": "exact product search query",
+  "products": [
+    {
+      "site": "Amazon",
+      "title": "boAt Airdopes 141 v2 TWS Earbuds with 42H Playtime, ENx Tech, ASAP Charge",
+      "price": 1299,
+      "originalPrice": 2990,
+      "discount": 57,
+      "rating": 4.1,
+      "reviews": 85420,
+      "badge": "Best Seller",
+      "highlights": ["42H total playtime", "ENx noise cancellation", "ASAP Charge 5 min=75 min"],
+      "inStock": true,
+      "delivery": "Free delivery tomorrow"
+    }
+  ]
+}
+
+STRICT RULES:
+- detectedProduct mein EXACT product naam likho — koi generic naam nahi
+- Har platform pe SAME product ka price dikhao, alag product nahi
+- Prices realistic honI chahiye (not too low, not too high)
+- Agar product kisi site pe nahi milta to skip karo
+- LAPTOP URL se sirf LAPTOP results, PHONE URL se sirf PHONE results`;
 
   try {
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const useWorker = WORKER_URL && WORKER_URL !== "YAHAN_WORKER_URL_DAALO";
+
+    const requestBody = {
+      model: "llama-3.1-8b-instant",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 2000,
+      // Worker ke liye — product URL pass karo taaki server side fetch ho sake
+      ...(useWorker ? { productUrl: url } : {}),
+    };
+
+    const endpoint = useWorker
+      ? WORKER_URL
+      : "https://api.groq.com/openai/v1/chat/completions";
+
+    const headers = { "Content-Type": "application/json" };
+    if (!useWorker) headers["Authorization"] = `Bearer ${key}`;
+
+    const res = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
+      headers,
+      body: JSON.stringify(requestBody),
     });
 
     const data = await res.json();
@@ -471,7 +560,12 @@ Source: ${detectSource(url)}`;
     productQuery = parsed.searchQuery || parsed.detectedProduct || "product";
     allProducts = parsed.products.map(p => ({ ...p, buyLink: affLink(p.site, productQuery) }));
 
-    document.getElementById("detectedProduct").textContent = parsed.detectedProduct || url;
+    // Worker ne product title fetch kiya ho toh woh use karo
+    if (data._fetchedTitle) {
+      document.getElementById("detectedProduct").textContent = data._fetchedTitle;
+    } else {
+      document.getElementById("detectedProduct").textContent = parsed.detectedProduct || url;
+    }
     document.getElementById("aiSummary").textContent = parsed.summary || "";
 
     if (parsed.bestDeal) {
