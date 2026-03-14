@@ -426,44 +426,60 @@ async function doCompare() {
   document.getElementById("loaderTxt").innerHTML = t.loaderTxt + ' <span class="dot-pulse"><span></span><span></span><span></span></span>';
   document.getElementById("compareBtn").disabled = true;
 
-  // ── STEP 1: Product title fetch karo (CORS proxy se) ──
+  // ── STEP 1: Product title fetch karo ──
   let fetchedTitle = "";
   let fetchedDesc = "";
 
-  document.getElementById("loaderTxt").innerHTML = "Product page fetch ho rahi hai... " + '<span class="dot-pulse"><span></span><span></span><span></span></span>';
+  document.getElementById("loaderTxt").innerHTML = "Product identify ho raha hai... " + '<span class="dot-pulse"><span></span><span></span><span></span></span>';
 
-  try {
-    // allorigins.win — free CORS proxy, koi setup nahi chahiye
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    const pageRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
-    const html = await pageRes.text();
+  // ASIN extract karo Amazon URL se
+  const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/d\/([A-Za-z0-9]+)/i);
+  const asin = asinMatch ? asinMatch[1] : "";
 
-    if (html && html.length > 500) {
-      // Amazon: #productTitle span
+  // Multiple proxy strategies try karo
+  const proxies = [
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  ];
+
+  for (const proxyUrl of proxies) {
+    try {
+      const pageRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      let html = await pageRes.text();
+
+      // allorigins /get returns JSON with .contents
+      if (proxyUrl.includes("/get?url=")) {
+        try { html = JSON.parse(html).contents || ""; } catch(e) {}
+      }
+
+      if (!html || html.length < 500) continue;
+
+      // Amazon: #productTitle
       const amzSpan = html.match(/id="productTitle"[^>]*>\s*([\s\S]{5,300}?)\s*<\/span>/i);
-      if (amzSpan) fetchedTitle = amzSpan[1].replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+      if (amzSpan) {
+        fetchedTitle = amzSpan[1].replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+      }
 
-      // og:title (works for all platforms)
+      // og:title
       if (!fetchedTitle) {
         const og = html.match(/property="og:title"\s+content="([^"]{5,300})"/i)
                 || html.match(/content="([^"]{5,300})"\s+property="og:title"/i);
         if (og) {
           fetchedTitle = og[1]
-            .replace(/\s*[-|]\s*(Amazon|Flipkart|Meesho|Myntra|JioMart|Buy Online|Online Shopping)[\s\S]*/gi,"")
+            .replace(/\s*[-|:]\s*(Amazon|Flipkart|Meesho|Myntra|JioMart|Buy|Shop|Online)[\s\S]*/gi,"")
             .trim();
         }
       }
 
-      // <title> tag fallback
+      // <title> tag
       if (!fetchedTitle) {
         const titleTag = html.match(/<title[^>]*>([\s\S]{5,300}?)<\/title>/i);
         if (titleTag) {
           fetchedTitle = titleTag[1]
             .replace(/\s*[-:|]\s*(Amazon|Flipkart|Meesho|Myntra|JioMart|Buy|Shop|Online)[\s\S]*/gi,"")
             .replace(/Buy\s+/i,"")
-            .replace(/\s+/g," ")
-            .trim()
-            .substring(0, 200);
+            .replace(/\s+/g," ").trim().substring(0, 200);
         }
       }
 
@@ -471,10 +487,34 @@ async function doCompare() {
       const ogDesc = html.match(/property="og:description"\s+content="([^"]{10,400})"/i)
                   || html.match(/content="([^"]{10,400})"\s+property="og:description"/i);
       if (ogDesc) fetchedDesc = ogDesc[1].trim().substring(0, 300);
-    }
-  } catch(e) {
-    // Proxy fail ho toh URL se hi try karo — chalte rahenge
-    fetchedTitle = "";
+
+      if (fetchedTitle) break; // mil gaya, loop band karo
+
+    } catch(e) { continue; }
+  }
+
+  // Agar proxy se nahi mila toh Google search se try karo
+  if (!fetchedTitle && (asin || detectSource(url) !== "Unknown")) {
+    try {
+      const searchQuery = asin
+        ? `amazon.in ${asin} product`
+        : url.replace(/https?:\/\/(www\.)?/,"").split("/").slice(0,3).join(" ");
+
+      const googleProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&num=3`)}`;
+      const gRes = await fetch(googleProxy, { signal: AbortSignal.timeout(8000) });
+      const gData = await gRes.json();
+      const gHtml = gData.contents || "";
+
+      // Google search result title
+      const gTitle = gHtml.match(/class="[^"]*LC20lb[^"]*"[^>]*>([^<]{10,200})</i)
+                  || gHtml.match(/<h3[^>]*>([^<]{10,200})<\/h3>/i);
+      if (gTitle) {
+        fetchedTitle = gTitle[1]
+          .replace(/\s*[-|]\s*(Amazon|Flipkart|Buy)[\s\S]*/gi,"")
+          .replace(/Amazon\.in\s*:/gi,"")
+          .trim();
+      }
+    } catch(e) {}
   }
 
   // ── STEP 2: URL se fallback hints ──
