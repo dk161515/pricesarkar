@@ -301,13 +301,17 @@ footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-ali
 //   🔑 STEP 1: GROQ API KEY — console.groq.com se FREE key lo
 //   ⚠️  PURANI KEY DELETE KARO — nai key banao!
 // ╚══════════════════════════════════════════════════════════════╝
+// =====================================================
+// 👇 SIRF YE LINE BADLO — APNI KEY YAHAN DAALO
+// =====================================================
 const GROQ_API_KEY = "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";
+// =====================================================
 
 // ╔══════════════════════════════════════════════════════════════╗
 //   🛒 STEP 2: AFFILIATE IDs — jab approve ho tab bharo
 // ╚══════════════════════════════════════════════════════════════╝
 const AFF = {
-  amazon:   "",   // e.g. "yourname-21"
+  amazon:   "fitwithdk-21",   // e.g. "yourname-21"
   flipkart: "",   // Flipkart affiliate ID
   meesho:   "",
   myntra:   "",
@@ -408,14 +412,7 @@ async function doCompare() {
     return;
   }
 
-  // Key check — sirf empty string check
   const key = (GROQ_API_KEY || "").trim();
-  if (!key || key === "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") {
-    showError(`⚠️ <strong>Groq API Key nahi dali!</strong><br>
-      File mein <code>GROQ_API_KEY = "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"</code> dhundho aur apni key se replace karo.<br>
-      🔗 Free key: <a href="https://console.groq.com" target="_blank" style="color:#e47911;font-weight:700">console.groq.com</a>`);
-    return;
-  }
 
   const t = TR[currentLang];
   show("loaderSection"); hide("resultsSection"); hide("errorBox"); hide("howSection");
