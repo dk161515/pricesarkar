@@ -835,7 +835,7 @@ Source platform: ${detectSource(url)}`;
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -890,19 +890,25 @@ Source platform: ${detectSource(url)}`;
   } catch (err) {
     hide("loaderSection");
     const eb = document.getElementById("errorBox");
-    let msg = "⚠️ Kuch problem aayi. Valid product URL daalen aur dobara try karein.";
-    if (err.message) {
-      if (err.message.includes("API_KEY_INVALID") || err.message.includes("API key not valid")) {
-        msg = `⚠️ <strong>Gemini API Key galat hai.</strong><br>
-          <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">aistudio.google.com</a> se sahi key copy karein aur GEMINI_API_KEY mein daalen.`;
-      } else if (err.message.includes("RESOURCE_EXHAUSTED") || err.message.includes("quota")) {
-        msg = "⚠️ <strong>API limit ho gayi.</strong> Gemini free tier mein 15 requests/minute allowed hain. 1 minute baad dobara try karein.";
-      } else if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
-        msg = "⚠️ <strong>Network error.</strong> Internet connection check karein aur dobara try karein.";
-      } else {
-        msg = `⚠️ Error: ${err.message}`;
-      }
+    const rawMsg = err.message || "Unknown error";
+    let msg;
+
+    if (rawMsg.includes("API_KEY_INVALID") || rawMsg.includes("API key not valid") || rawMsg.includes("invalid API key")) {
+      msg = `⚠️ <strong>API Key galat hai.</strong><br>
+        <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">aistudio.google.com</a> se sahi key copy karein aur <code>GEMINI_API_KEY</code> mein daalen.`;
+    } else if (rawMsg.includes("RESOURCE_EXHAUSTED") || rawMsg.includes("quota exceeded")) {
+      msg = `⚠️ <strong>Daily quota khatam ho gayi.</strong><br>
+        Free tier limit 1500 requests/day hai. Kal dobara try karein ya
+        <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">naya Google account</a> banakar new API key lo.`;
+    } else if (rawMsg.includes("not found") || rawMsg.includes("not supported")) {
+      msg = `⚠️ <strong>Model error.</strong><br>Raw error: ${rawMsg}<br>
+        <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">aistudio.google.com</a> par jaake check karein ki aapka account active hai.`;
+    } else if (rawMsg.includes("Failed to fetch") || rawMsg.includes("NetworkError") || rawMsg.includes("network")) {
+      msg = "⚠️ <strong>Network error.</strong> Internet connection check karein aur dobara try karein.";
+    } else {
+      msg = `⚠️ <strong>Error aaya:</strong> ${rawMsg}<br><small style="color:#aaa">Agar ye baar baar aa raha hai toh API key dobara check karein.</small>`;
     }
+
     eb.innerHTML = msg;
     show("errorBox");
     show("howSection");
