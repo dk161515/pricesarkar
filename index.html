@@ -302,16 +302,8 @@ footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-ali
 //   ⚠️  PURANI KEY DELETE KARO — nai key banao!
 // ╚══════════════════════════════════════════════════════════════╝
 // =====================================================
-// 🔒 OPTION A — Cloudflare Worker (KEY SAFE REHTI HAI)
-//    Worker deploy karne ke baad Worker URL yahan daalo
-//    e.g. "https://pricesarkar.yourname.workers.dev"
-// =====================================================
-const WORKER_URL = "https://long-dream-35e5.dk161515ja.workers.dev/";
-
-// =====================================================
-// ⚠️  OPTION B — Direct Key (key visible hoti hai)
-//    Agar Worker nahi banaya to apni Groq key yahan
-//    WORKER_URL blank "" rakhna hoga
+// 👇 APNI GROQ API KEY YAHAN DAALO
+// Free key: https://console.groq.com → API Keys → Create
 // =====================================================
 const GROQ_API_KEY = "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";
 // =====================================================
@@ -421,83 +413,133 @@ async function doCompare() {
     return;
   }
 
-
-
   const key = (GROQ_API_KEY || "").trim();
-  const workerSet = WORKER_URL && WORKER_URL !== "YAHAN_WORKER_URL_DAALO";
-  if (!workerSet && !key) { showError("⚠️ WORKER_URL ya GROQ_API_KEY mein se koi ek daalna zaroori hai."); return; }
+  if (!key || key === "APNI_KEY_YAHAN") {
+    showError(`⚠️ <strong>Groq API Key daalni hai!</strong><br>
+      File mein <code>GROQ_API_KEY = "APNI_KEY_YAHAN"</code> dhundho aur apni key daalo.<br>
+      🔗 <a href="https://console.groq.com" target="_blank" style="color:#e47911;font-weight:700">console.groq.com</a> → API Keys → Create API Key`);
+    return;
+  }
 
   const t = TR[currentLang];
   show("loaderSection"); hide("resultsSection"); hide("errorBox"); hide("howSection");
   document.getElementById("loaderTxt").innerHTML = t.loaderTxt + ' <span class="dot-pulse"><span></span><span></span><span></span></span>';
   document.getElementById("compareBtn").disabled = true;
 
-  // URL se basic hints
+  // ── STEP 1: Product title fetch karo (CORS proxy se) ──
+  let fetchedTitle = "";
+  let fetchedDesc = "";
+
+  document.getElementById("loaderTxt").innerHTML = "Product page fetch ho rahi hai... " + '<span class="dot-pulse"><span></span><span></span><span></span></span>';
+
+  try {
+    // allorigins.win — free CORS proxy, koi setup nahi chahiye
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const pageRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+    const html = await pageRes.text();
+
+    if (html && html.length > 500) {
+      // Amazon: #productTitle span
+      const amzSpan = html.match(/id="productTitle"[^>]*>\s*([\s\S]{5,300}?)\s*<\/span>/i);
+      if (amzSpan) fetchedTitle = amzSpan[1].replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+
+      // og:title (works for all platforms)
+      if (!fetchedTitle) {
+        const og = html.match(/property="og:title"\s+content="([^"]{5,300})"/i)
+                || html.match(/content="([^"]{5,300})"\s+property="og:title"/i);
+        if (og) {
+          fetchedTitle = og[1]
+            .replace(/\s*[-|]\s*(Amazon|Flipkart|Meesho|Myntra|JioMart|Buy Online|Online Shopping)[\s\S]*/gi,"")
+            .trim();
+        }
+      }
+
+      // <title> tag fallback
+      if (!fetchedTitle) {
+        const titleTag = html.match(/<title[^>]*>([\s\S]{5,300}?)<\/title>/i);
+        if (titleTag) {
+          fetchedTitle = titleTag[1]
+            .replace(/\s*[-:|]\s*(Amazon|Flipkart|Meesho|Myntra|JioMart|Buy|Shop|Online)[\s\S]*/gi,"")
+            .replace(/Buy\s+/i,"")
+            .replace(/\s+/g," ")
+            .trim()
+            .substring(0, 200);
+        }
+      }
+
+      // og:description
+      const ogDesc = html.match(/property="og:description"\s+content="([^"]{10,400})"/i)
+                  || html.match(/content="([^"]{10,400})"\s+property="og:description"/i);
+      if (ogDesc) fetchedDesc = ogDesc[1].trim().substring(0, 300);
+    }
+  } catch(e) {
+    // Proxy fail ho toh URL se hi try karo — chalte rahenge
+    fetchedTitle = "";
+  }
+
+  // ── STEP 2: URL se fallback hints ──
   const urlLower = url.toLowerCase();
   let urlHint = "";
-  if (urlLower.includes("laptop") || urlLower.includes("notebook") || urlLower.includes("macbook")) urlHint = "LAPTOP";
-  else if (urlLower.includes("phone") || urlLower.includes("mobile") || urlLower.includes("iphone") || urlLower.includes("galaxy-s") || urlLower.includes("galaxy-a") || urlLower.includes("redmi") || urlLower.includes("realme")) urlHint = "SMARTPHONE";
-  else if (urlLower.includes("tablet") || urlLower.includes("ipad")) urlHint = "TABLET";
-  else if (urlLower.includes("headphone") || urlLower.includes("earphone") || urlLower.includes("earbuds") || urlLower.includes("airpods") || urlLower.includes("airdopes")) urlHint = "EARBUDS/HEADPHONE";
-  else if (urlLower.includes("tv") || urlLower.includes("television")) urlHint = "TELEVISION";
-  else if (urlLower.includes("watch") || urlLower.includes("smartwatch")) urlHint = "SMARTWATCH";
-  else if (urlLower.includes("shirt") || urlLower.includes("tshirt") || urlLower.includes("dress") || urlLower.includes("jeans") || urlLower.includes("kurta") || urlLower.includes("saree")) urlHint = "CLOTHING";
-  else if (urlLower.includes("shoe") || urlLower.includes("sneaker") || urlLower.includes("sandal") || urlLower.includes("chappal")) urlHint = "FOOTWEAR";
+  if (urlLower.includes("laptop")||urlLower.includes("notebook")||urlLower.includes("macbook")||urlLower.includes("chromebook")) urlHint="LAPTOP";
+  else if (urlLower.includes("iphone")||urlLower.includes("galaxy-s")||urlLower.includes("galaxy-a")||urlLower.includes("redmi")||urlLower.includes("realme")||urlLower.includes("smartphone")||urlLower.includes("poco")||urlLower.includes("oneplus")) urlHint="SMARTPHONE";
+  else if (urlLower.includes("tablet")||urlLower.includes("ipad")) urlHint="TABLET";
+  else if (urlLower.includes("earbuds")||urlLower.includes("earphone")||urlLower.includes("headphone")||urlLower.includes("airpods")||urlLower.includes("airdopes")||urlLower.includes("neckband")) urlHint="EARBUDS/HEADPHONE";
+  else if (urlLower.includes("-tv-")||urlLower.includes("television")||urlLower.includes("qled")||urlLower.includes("oled")||urlLower.includes("smart-tv")) urlHint="TELEVISION";
+  else if (urlLower.includes("watch")||urlLower.includes("smartwatch")) urlHint="SMARTWATCH";
+  else if (urlLower.includes("refrigerator")||urlLower.includes("fridge")) urlHint="REFRIGERATOR";
+  else if (urlLower.includes("washing")||urlLower.includes("washer")) urlHint="WASHING MACHINE";
+  else if (urlLower.includes("shirt")||urlLower.includes("tshirt")||urlLower.includes("dress")||urlLower.includes("jeans")||urlLower.includes("kurta")||urlLower.includes("saree")||urlLower.includes("lehenga")) urlHint="CLOTHING";
+  else if (urlLower.includes("shoe")||urlLower.includes("sneaker")||urlLower.includes("sandal")||urlLower.includes("chappal")||urlLower.includes("boot")) urlHint="FOOTWEAR";
+  else if (urlLower.includes("camera")||urlLower.includes("dslr")||urlLower.includes("mirrorless")) urlHint="CAMERA";
 
-  // URL path se product words nikalo
   let urlProductName = "";
   try {
     const urlObj = new URL(url);
     const pathParts = urlObj.pathname.split("/").filter(p =>
       p && p.length > 2 &&
-      !p.match(/^[A-Z0-9]{10}$/) &&
-      !["dp","d","p","product","buy","ip","itm","s","ref"].includes(p)
+      !p.match(/^[A-Z0-9]{8,}$/) &&
+      !["dp","d","p","product","buy","ip","itm","s","ref","search"].includes(p.toLowerCase())
     );
-    urlProductName = pathParts.join(" ").replace(/[-_]/g, " ").trim().substring(0, 200);
+    urlProductName = pathParts.join(" ").replace(/[-_]/g," ").trim().substring(0,200);
   } catch(e) {}
 
-  const prompt = `You are a smart Indian e-commerce product comparison assistant.
+  // ── STEP 3: AI Prompt ──
+  document.getElementById("loaderTxt").innerHTML = t.loaderTxt + ' <span class="dot-pulse"><span></span><span></span><span></span></span>';
 
-USER TASK: Find the EXACT product from this URL and show it across ALL Indian shopping platforms.
+  const productInfo = fetchedTitle
+    ? `FETCHED PRODUCT TITLE: "${fetchedTitle}"${fetchedDesc ? `\nPRODUCT DESCRIPTION: "${fetchedDesc}"` : ""}`
+    : `URL PATH TEXT: "${urlProductName}"\nCATEGORY HINT: ${urlHint || "identify from URL"}`;
+
+  const prompt = `You are an Indian e-commerce product comparison assistant.
+
+USER GOAL: Find this EXACT product on ALL major Indian shopping platforms and show realistic prices.
 
 Product URL: ${url}
-Source Platform: ${detectSource(url)}
-URL path text: "${urlProductName}"
-Category hint: ${urlHint || "identify from URL"}
+Source: ${detectSource(url)}
+${productInfo}
 
-=== YOUR JOB ===
-STEP 1: Identify the EXACT product
-- Read URL path words carefully: brand, model, variant, color, storage etc
-- Example URL path "boAt-Airdopes-141-bluetooth" → product is "boAt Airdopes 141 Bluetooth Earbuds"
-- Example URL path "Samsung-Galaxy-M34-5G" → product is "Samsung Galaxy M34 5G Smartphone"  
-- Example URL path "HP-Pavilion-15-Laptop-Intel" → product is "HP Pavilion 15 Laptop"
-- If short URL with no path info → use category hint
-
-STEP 2: Show THIS SAME EXACT product on all relevant platforms
-- Amazon, Flipkart: almost always available
-- Meesho: only for clothing, accessories, home decor, small items
-- Myntra: only for clothing, footwear, fashion accessories
-- JioMart: grocery, FMCG, some electronics
-
-STEP 3: Return realistic prices for THIS specific product
+YOUR TASK:
+1. Identify the EXACT product (brand + model + variant/color/storage)
+2. Show this SAME product listed on Amazon, Flipkart, and other relevant Indian platforms
+3. Give realistic current Indian market prices
 
 Return ONLY valid JSON, no markdown, no backticks:
 {
-  "detectedProduct": "Exact product: Brand + Model + Key Specs (e.g. boAt Airdopes 141 v2 Bluetooth Earbuds Black)",
-  "summary": "Hindi-English mein: konsi site pe yahi product sabse sasta hai aur kitne ka hai",
+  "detectedProduct": "EXACT product name — Brand Model Variant (e.g. boAt Airdopes 141 v2 TWS Earbuds Black 42H)",
+  "summary": "Konsi site pe sabse sasta hai aur kitna — 2 lines Hindi-English mein",
   "bestDeal": "site name",
   "searchQuery": "exact product search query",
   "products": [
     {
       "site": "Amazon",
-      "title": "boAt Airdopes 141 v2 TWS Earbuds with 42H Playtime, ENx Tech, ASAP Charge",
+      "title": "Exact product title as it appears on Amazon",
       "price": 1299,
       "originalPrice": 2990,
       "discount": 57,
       "rating": 4.1,
       "reviews": 85420,
       "badge": "Best Seller",
-      "highlights": ["42H total playtime", "ENx noise cancellation", "ASAP Charge 5 min=75 min"],
+      "highlights": ["42H total playtime", "ENx noise cancel", "ASAP Charge"],
       "inStock": true,
       "delivery": "Free delivery tomorrow"
     }
@@ -505,43 +547,33 @@ Return ONLY valid JSON, no markdown, no backticks:
 }
 
 STRICT RULES:
-- detectedProduct mein EXACT product naam likho — koi generic naam nahi
-- Har platform pe SAME product ka price dikhao, alag product nahi
-- Prices realistic honI chahiye (not too low, not too high)
-- Agar product kisi site pe nahi milta to skip karo
-- LAPTOP URL se sirf LAPTOP results, PHONE URL se sirf PHONE results`;
+- Har product same item hona chahiye — alag product mat dikhao
+- Sirf wahi sites dikhao jahan ye product actually milta hai
+- Electronics ke liye: Amazon + Flipkart (Myntra/Meesho skip)
+- Fashion ke liye: Myntra + Meesho + Amazon + Flipkart
+- Realistic 2024 INR prices, 3-12% variation across sites
+- Badge: "Best Seller"|"Deal of Day"|"Trending"|"Top Rated"|"Budget Pick"|"Official Store"|""`;
 
+  // ── STEP 4: API Call ──
   try {
-    const useWorker = WORKER_URL && WORKER_URL !== "YAHAN_WORKER_URL_DAALO";
-
     const requestBody = {
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
+      temperature: 0.4,
       max_tokens: 2000,
-      // Worker ke liye — product URL pass karo taaki server side fetch ho sake
-      ...(useWorker ? { productUrl: url } : {}),
     };
 
-    const endpoint = useWorker
-      ? WORKER_URL
-      : "https://api.groq.com/openai/v1/chat/completions";
-
-    const headers = { "Content-Type": "application/json" };
-    if (!useWorker) headers["Authorization"] = `Bearer ${key}`;
-
-    const res = await fetch(endpoint, {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${key}`,
+      },
       body: JSON.stringify(requestBody),
     });
 
     const data = await res.json();
-
-    if (!res.ok) {
-      const msg = data?.error?.message || `HTTP ${res.status}`;
-      throw new Error(msg);
-    }
+    if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
 
     const raw = data?.choices?.[0]?.message?.content || "";
     if (!raw) throw new Error("AI se response nahi mila.");
@@ -549,7 +581,7 @@ STRICT RULES:
     let parsed;
     try {
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON in response");
+      if (!jsonMatch) throw new Error("No JSON found");
       parsed = JSON.parse(jsonMatch[0]);
     } catch(e) {
       throw new Error("Response parse error. Dobara try karein.");
@@ -560,12 +592,9 @@ STRICT RULES:
     productQuery = parsed.searchQuery || parsed.detectedProduct || "product";
     allProducts = parsed.products.map(p => ({ ...p, buyLink: affLink(p.site, productQuery) }));
 
-    // Worker ne product title fetch kiya ho toh woh use karo
-    if (data._fetchedTitle) {
-      document.getElementById("detectedProduct").textContent = data._fetchedTitle;
-    } else {
-      document.getElementById("detectedProduct").textContent = parsed.detectedProduct || url;
-    }
+    // Fetched title ya AI detected title
+    const displayTitle = fetchedTitle || parsed.detectedProduct || url;
+    document.getElementById("detectedProduct").textContent = displayTitle;
     document.getElementById("aiSummary").textContent = parsed.summary || "";
 
     if (parsed.bestDeal) {
@@ -585,25 +614,19 @@ STRICT RULES:
     hide("loaderSection");
     const m = err.message || "";
     let msg;
-    if (m.includes("401") || m.includes("api_key") || m.includes("Invalid API")) {
+    if (m.includes("401")||m.includes("api_key")||m.includes("Invalid API")) {
       msg = `⚠️ <strong>API Key galat hai.</strong> <a href="https://console.groq.com" target="_blank" style="color:#e47911">console.groq.com</a> se nai key banao.`;
-    } else if (m.includes("429") || m.includes("rate")) {
+    } else if (m.includes("429")||m.includes("rate")) {
       msg = "⚠️ <strong>Rate limit.</strong> 1 minute baad dobara try karein.";
-    } else if (m.includes("fetch") || m.includes("network") || m.includes("Network")) {
+    } else if (m.includes("fetch")||m.includes("network")||m.includes("Network")) {
       msg = "⚠️ <strong>Network error.</strong> Internet check karein.";
     } else {
-      msg = `⚠️ <strong>Error:</strong> ${m || "Unknown error"}`;
+      msg = `⚠️ <strong>Error:</strong> ${m}`;
     }
     showError(msg);
     show("howSection");
     document.getElementById("compareBtn").disabled = false;
   }
-}
-
-function showError(msg) {
-  const eb = document.getElementById("errorBox");
-  eb.innerHTML = msg;
-  show("errorBox");
 }
 
 // ── Tabs ──
