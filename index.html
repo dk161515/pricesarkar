@@ -263,7 +263,7 @@ footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-ali
       <div class="paste-row">
         <input class="paste-inp" id="urlInput" type="url"
           placeholder="कोई भी product link यहाँ paste करें..."
-          id="urlInput"
+          autocomplete="off"
           onkeydown="if(event.key==='Enter')doCompare()"/>
         <button class="clear-btn" id="clearBtn" onclick="clearInput()" style="display:none">✕</button>
         <button class="compare-btn" id="compareBtn" onclick="doCompare()">
@@ -523,16 +523,34 @@ footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-ali
 <!-- ══ SCRIPT ══ -->
 <script>
 
-// ══════════════════════════════════════
-//  ⚙️ AFFILIATE CONFIG
-//  Yahan apna affiliate tag daalen
-// ══════════════════════════════════════
+// ╔══════════════════════════════════════════════════════╗
+//  🔑  STEP 1 — GEMINI API KEY YAHAN DAALEN
+//  FREE key lene ke liye: https://aistudio.google.com
+//  "Get API Key" → "Create API Key" → copy karein
+// ╚══════════════════════════════════════════════════════╝
+const GEMINI_API_KEY = "AIzaSyCwAPhr6ldUuB5YzLhVII40JIntGCjSjrg";   
+
+// ╔══════════════════════════════════════════════════════╗
+//  🛒  STEP 2 — AFFILIATE IDs YAHAN DAALEN
+//  Jab tak affiliate approved na ho, blank rakhein
+//  Tab bhi site kaam karegi (bina commission ke)
+// ╚══════════════════════════════════════════════════════╝
 const AFF = {
-  amazon:   "YOUR-AMAZON-TAG-21",    // Amazon Associates tag e.g. deepak-21
-  flipkart: "YOUR-FLIPKART-AFFID",   // Flipkart affiliate ID
-  meesho:   "",                       // Meesho referral code (optional)
-  myntra:   "",                       // Myntra affiliate ID (optional)
-  jiomart:  "",                       // JioMart partner code (optional)
+  // Amazon Associates: https://affiliate-program.amazon.in
+  // Tag format: "yourname-21"  (India ke liye -21 hota hai)
+  amazon:   "",   // 👈 e.g. "ramesh-21"
+
+  // Flipkart Affiliate: https://affiliate.flipkart.com
+  flipkart: "",   // 👈 e.g. "fk_affiliate_12345"
+
+  // Meesho Affiliate: App se referral code milta hai
+  meesho:   "",   // 👈 optional
+
+  // Myntra Affiliate: https://www.myntra.com/affiliates
+  myntra:   "",   // 👈 optional
+
+  // JioMart: Partner program se
+  jiomart:  "",   // 👈 optional
 };
 
 function affLink(site, query) {
@@ -753,25 +771,36 @@ function detectSource(url) {
 // ══════════════════════════════════════
 async function doCompare() {
   const url = document.getElementById("urlInput").value.trim();
-  if(!url) { document.getElementById("urlInput").focus(); return; }
-  const t = TR[currentLang];
+  if (!url) { document.getElementById("urlInput").focus(); return; }
 
+  // URL basic validation
+  if (!url.startsWith("http")) {
+    const eb = document.getElementById("errorBox");
+    eb.innerHTML = "⚠️ Valid product URL daalen — <strong>http://</strong> ya <strong>https://</strong> se shuru hona chahiye.";
+    show("errorBox"); return;
+  }
+
+  // API Key check
+  if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 10) {
+    const eb = document.getElementById("errorBox");
+    eb.innerHTML = `⚠️ <strong>Gemini API Key setup baaki hai!</strong><br>
+      index.html mein sabse upar <code>GEMINI_API_KEY</code> mein apni free key daalen.<br>
+      🔗 Free key yahan milegi: <a href="https://aistudio.google.com" target="_blank" style="color:#e47911;font-weight:700">aistudio.google.com</a>
+      &rarr; Get API Key &rarr; Create API Key`;
+    show("errorBox"); return;
+  }
+
+  const t = TR[currentLang];
   show("loaderSection"); hide("resultsSection"); hide("errorBox"); hide("howSection");
   document.getElementById("loaderTxt").innerHTML = t.loaderTxt + ' <span class="dot-pulse"><span></span><span></span><span></span></span>';
   document.getElementById("compareBtn").disabled = true;
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        system:`You are an Indian e-commerce price comparison assistant. The user provides a product URL. Extract product details and generate estimated price comparisons across Amazon India, Flipkart, Meesho, Myntra, and JioMart.
+  const prompt = `You are an Indian e-commerce price comparison assistant.
+The user provides a product URL. Extract product details and generate estimated price comparisons across Amazon India, Flipkart, Meesho, Myntra, and JioMart.
 
 IMPORTANT: These are AI-estimated prices for comparison only, not real scraped data.
 
-Return ONLY valid JSON, no markdown:
+Return ONLY valid JSON — no markdown, no backticks, no explanation:
 {
   "detectedProduct": "Short product name e.g. Samsung Galaxy S24 128GB Phantom Black",
   "summary": "2-line buying advice in Hindi-English mix, mention which site seems cheapest",
@@ -796,17 +825,45 @@ Return ONLY valid JSON, no markdown:
 
 Rules:
 - 1-2 products per relevant site (5-8 total)
-- Realistic 2024 INR prices
-- Skip site if product category not sold there (e.g. electronics on Myntra)
-- badge: "Best Seller"|"Deal of Day"|"Trending"|"Top Rated"|"Budget Pick"|"Official Store"|""
-- Vary prices 3-15% across sites realistically`,
-        messages:[{role:"user", content:`URL: ${url}\nSource: ${detectSource(url)}`}],
-      }),
-    });
+- Realistic current INR prices
+- Skip site if product category not sold there (e.g. skip Myntra for electronics)
+- badge options: "Best Seller"|"Deal of Day"|"Trending"|"Top Rated"|"Budget Pick"|"Official Store"|""
+- Vary prices 3-15% across sites realistically
+
+URL: ${url}
+Source platform: ${detectSource(url)}`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 },
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+    }
 
     const data = await res.json();
-    const raw = data.content?.[0]?.text || "";
-    const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!raw) throw new Error("AI se koi response nahi mila. Dobara try karein.");
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch (e) {
+      throw new Error("AI response parse nahi ho saka. Dobara try karein.");
+    }
+
+    if (!parsed.products || !parsed.products.length)
+      throw new Error("Product data nahi mila. Koi aur product URL try karein.");
 
     productQuery = parsed.searchQuery || parsed.detectedProduct || "product";
     allProducts = (parsed.products || []).map(p => ({
@@ -817,7 +874,7 @@ Rules:
     document.getElementById("detectedProduct").textContent = parsed.detectedProduct || url;
     document.getElementById("aiSummary").textContent = parsed.summary || "";
 
-    if(parsed.bestDeal){
+    if (parsed.bestDeal) {
       document.getElementById("bestDealSite").textContent = parsed.bestDeal;
       document.getElementById("bestDealPill").style.display = "inline-flex";
     } else {
@@ -828,15 +885,29 @@ Rules:
     renderProducts();
     hide("loaderSection");
     show("resultsSection");
-    window.scrollTo({top: document.querySelector(".main").offsetTop - 70, behavior:"smooth"});
+    window.scrollTo({ top: document.querySelector(".main").offsetTop - 70, behavior: "smooth" });
 
-  } catch(err) {
+  } catch (err) {
     hide("loaderSection");
-    document.getElementById("errorBox").textContent = "⚠️ Kuch problem aayi. Please valid product URL daalen aur dobara try karein.";
+    const eb = document.getElementById("errorBox");
+    let msg = "⚠️ Kuch problem aayi. Valid product URL daalen aur dobara try karein.";
+    if (err.message) {
+      if (err.message.includes("API_KEY_INVALID") || err.message.includes("API key not valid")) {
+        msg = `⚠️ <strong>Gemini API Key galat hai.</strong><br>
+          <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">aistudio.google.com</a> se sahi key copy karein aur GEMINI_API_KEY mein daalen.`;
+      } else if (err.message.includes("RESOURCE_EXHAUSTED") || err.message.includes("quota")) {
+        msg = "⚠️ <strong>API limit ho gayi.</strong> Gemini free tier mein 15 requests/minute allowed hain. 1 minute baad dobara try karein.";
+      } else if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
+        msg = "⚠️ <strong>Network error.</strong> Internet connection check karein aur dobara try karein.";
+      } else {
+        msg = `⚠️ Error: ${err.message}`;
+      }
+    }
+    eb.innerHTML = msg;
     show("errorBox");
     show("howSection");
+    document.getElementById("compareBtn").disabled = false;
   }
-  document.getElementById("compareBtn").disabled = false;
 }
 
 // ══════════════════════════════════════
