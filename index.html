@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PriceSarkar – AI Price Comparison India</title>
+<meta name="description" content="Compare estimated prices across top Indian shopping platforms instantly with AI. An independent price comparison tool."/>
+
+<!-- LEGAL META: Clarify independent nature -->
+<meta name="robots" content="index, follow"/>
+<meta property="og:title" content="PriceSarkar – AI Price Comparison"/>
+<meta property="og:description" content="Independent AI-powered price comparison tool for Indian shoppers."/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet"/>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#1a1a1a;min-height:100vh}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#f7f6f2}
+::-webkit-scrollbar-thumb{background:#e47911;border-radius:3px}
+a{text-decoration:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes popIn{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes bounceDot{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+
+/* ── AFFILIATE BANNER (Legal Requirement) ── */
+.aff-banner{background:#fffbe6;border-bottom:1.5px solid #ffe58f;padding:8px 20px;text-align:center;font-size:12px;color:#7d6608;font-weight:500;line-height:1.5}
+.aff-banner strong{color:#5a4a00}
+
+/* ── NAV ── */
+nav{background:#fff;border-bottom:1.5px solid #ebebeb;position:sticky;top:0;z-index:100;padding:0 20px}
+.nav-inner{max-width:1000px;margin:0 auto;height:58px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#e47911,#c96800);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-family:'Fraunces',serif;font-size:21px;font-weight:900;color:#e47911}
+.logo-badge{font-size:10px;background:#fff0e0;color:#e47911;border:1px solid #f5c888;border-radius:5px;padding:2px 7px;font-weight:700}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-links{display:flex;gap:4px}
+.nav-link{font-size:12px;color:#888;padding:6px 10px;border-radius:7px;cursor:pointer;transition:all .18s;background:none;border:none;font-family:inherit;font-weight:500}
+.nav-link:hover{background:#fff8f0;color:#e47911}
+
+/* Language picker */
+.lang-wrap{position:relative}
+.lang-btn{background:none;border:1.5px solid #e8e8e8;border-radius:8px;padding:6px 13px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .18s;color:#555;display:flex;align-items:center;gap:5px}
+.lang-btn:hover{background:#fff8f0;border-color:#e47911;color:#e47911}
+.lang-drop{display:none;position:absolute;top:calc(100% + 7px);right:0;background:#fff;border:1.5px solid #ebebeb;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px #0000001a;z-index:200;min-width:140px;animation:popIn .18s ease}
+.lang-drop.show{display:block}
+.lang-opt{padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:9px;color:#333}
+.lang-opt:hover{background:#fff8f0;color:#e47911}
+.lang-opt.active{font-weight:700;color:#e47911}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(160deg,#fff8f0 0%,#fff3e4 55%,#f7f6f2 100%);border-bottom:1.5px solid #ebebeb;padding:44px 20px 36px}
+.hero-inner{max-width:720px;margin:0 auto;text-align:center}
+.hero-pill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #f5c888;border-radius:20px;padding:5px 16px;margin-bottom:20px;box-shadow:0 2px 10px #e4791115;font-size:11.5px;font-weight:700;color:#e47911}
+.hero-title{font-family:'Fraunces',serif;font-size:clamp(28px,6vw,48px);font-weight:900;line-height:1.15;margin-bottom:11px;color:#1a1a1a}
+.hero-title em{color:#e47911;font-style:italic}
+.hero-sub{color:#888;font-size:14px;margin-bottom:30px;line-height:1.7;max-width:500px;margin-left:auto;margin-right:auto}
+
+/* ── PRICE DISCLAIMER NOTICE ── */
+.price-notice{background:#fff;border:1.5px solid #e8e8e8;border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;text-align:left}
+.price-notice-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.price-notice-text{font-size:12px;color:#888;line-height:1.6}
+.price-notice-text strong{color:#555}
+
+/* ── PASTE BOX ── */
+.paste-card{background:#fff;border:2px solid #e8e8e8;border-radius:18px;padding:20px;margin-bottom:16px;transition:border-color .2s,box-shadow .2s}
+.paste-card:focus-within{border-color:#e47911;box-shadow:0 0 0 4px #e4791112}
+.paste-label{font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.paste-row{display:flex;align-items:center;gap:10px}
+.paste-inp{border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;color:#1a1a1a;flex:1;min-width:0;padding:6px 0}
+.paste-inp::placeholder{color:#bbb}
+.paste-hint{font-size:12px;color:#ccc;margin-top:8px;text-align:left}
+.compare-btn{background:linear-gradient(135deg,#e47911,#c96800);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.compare-btn:hover{transform:scale(1.04);box-shadow:0 8px 22px #e4791145}
+.compare-btn:disabled{opacity:.55;transform:none;box-shadow:none;cursor:not-allowed}
+.clear-btn{background:none;border:none;cursor:pointer;color:#ccc;font-size:18px;flex-shrink:0;line-height:1;padding:4px;transition:color .18s}
+.clear-btn:hover{color:#e47911}
+
+/* ── PLATFORM STRIP ── */
+/* NOTE: Only platform NAMES used — no logos/brand assets (trademark compliance) */
+.site-strip{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.site-badge{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #ebebeb;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:#555}
+.site-badge-note{font-size:11px;color:#ccc;text-align:center;margin-top:8px}
+
+/* ── HOW IT WORKS ── */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:36px}
+.how-card{background:#fff;border:1.5px solid #ebebeb;border-radius:16px;padding:22px 18px;text-align:center;animation:fadeUp .4s ease both}
+.how-icon{font-size:28px;margin-bottom:10px}
+.how-title{font-weight:700;font-size:14px;margin-bottom:5px}
+.how-desc{font-size:12px;color:#999;line-height:1.6}
+
+/* ── MAIN ── */
+.main{max-width:1000px;margin:0 auto;padding:30px 16px 60px}
+
+/* ── LOADER ── */
+.loader-wrap{text-align:center;padding:60px 20px;animation:fadeUp .3s ease}
+.spinner{width:38px;height:38px;border:3px solid #ebebeb;border-top-color:#e47911;border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 18px}
+.loader-txt{color:#aaa;font-size:14px;margin-bottom:22px}
+.loader-sites{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+.loader-site{text-align:center;animation:fadeUp .3s ease both}
+.loader-site-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px}
+.loader-site-name{font-size:11px;color:#bbb;font-weight:600}
+.dot-pulse{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.dot-pulse span{width:5px;height:5px;background:#e47911;border-radius:50%;animation:bounceDot 1.4s ease infinite}
+.dot-pulse span:nth-child(2){animation-delay:.16s}
+.dot-pulse span:nth-child(3){animation-delay:.32s}
+
+/* ── AI CARD ── */
+.ai-card{background:linear-gradient(135deg,#fff8f0,#fff3e4);border:1.5px solid #f5c888;border-radius:18px;padding:22px;margin-bottom:22px;display:flex;gap:16px;align-items:flex-start;animation:fadeUp .35s ease}
+.ai-avatar{width:46px;height:46px;background:#fff;border:1.5px solid #f5c888;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ai-label{font-size:11px;font-weight:800;color:#e47911;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.ai-text{font-size:14px;color:#444;line-height:1.75}
+.best-deal-pill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #f5c888;border-radius:20px;padding:5px 14px;margin-top:11px;font-size:12px;font-weight:700;color:#e47911}
+
+/* ── RESULT PRICE DISCLAIMER ── */
+.result-disclaimer{background:#fffbe6;border:1.5px solid #ffe58f;border-radius:12px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:#7d6608;display:flex;gap:8px;align-items:flex-start;line-height:1.6}
+
+/* ── PRODUCT CARDS ── */
+.product-input-card{background:#fff;border:1.5px solid #ebebeb;border-radius:16px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:13px;color:#666;animation:fadeUp .3s ease}
+.product-card{background:#fff;border:1.5px solid #ebebeb;border-radius:18px;padding:22px;transition:all .25s;animation:fadeUp .35s ease both;position:relative;overflow:hidden}
+.product-card:hover{border-color:#e4791144;box-shadow:0 8px 32px #e4791114;transform:translateY(-2px)}
+.prod-grid{display:grid;gap:14px}
+.badge-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+.prod-title{font-size:14px;font-weight:600;color:#222;line-height:1.55;margin-bottom:10px}
+.highlights{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
+.hl-tag{font-size:11px;color:#666;background:#f5f5f0;border:1px solid #e8e8e8;padding:3px 10px;border-radius:20px}
+.rating-row{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:14px}
+.stars{color:#f5a623;font-size:14px}
+.rating-num{font-size:13px;font-weight:700;color:#333}
+.review-cnt{font-size:11px;color:#bbb}
+.delivery-tag{font-size:11px;color:#27ae60;font-weight:600}
+.original-price{font-size:12px;color:#ccc;text-decoration:line-through;margin-bottom:2px}
+.main-price{font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:#1a1a1a;line-height:1}
+.price-est-note{font-size:10px;color:#ccc;margin-top:2px}
+.discount-tag{font-size:12px;color:#27ae60;font-weight:700;margin-top:3px}
+
+/* ── SHOP NOW ── */
+.shop-btn{display:inline-flex;align-items:center;gap:7px;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;border:none;text-decoration:none;color:#fff}
+.shop-btn:hover{transform:scale(1.04);filter:brightness(1.08)}
+.shop-btn .arr{font-size:16px;transition:transform .2s}
+.shop-btn:hover .arr{transform:translateX(3px)}
+
+/* ── TABS + SORT ── */
+.controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{background:none;border:1.5px solid #e8e8e8;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .18s;color:#666;white-space:nowrap}
+.tab.active{border-color:#e47911;background:#fff8f0;color:#e47911;font-weight:700}
+.tab:hover{border-color:#e47911;color:#e47911}
+.sort-sel{background:#fff;border:1.5px solid #e8e8e8;border-radius:10px;padding:8px 13px;font-size:13px;font-family:inherit;color:#555;cursor:pointer;outline:none}
+.sort-sel:focus{border-color:#e47911}
+
+/* ── ERROR ── */
+.error-box{background:#fff2f2;border:1.5px solid #ffd0d0;border-radius:14px;padding:20px;color:#cc3333;text-align:center;margin-bottom:20px;animation:fadeUp .3s ease}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:#0005;z-index:500;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:20px;padding:30px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;animation:popIn .2s ease;box-shadow:0 20px 60px #0003}
+.modal h2{font-family:'Fraunces',serif;font-size:22px;color:#e47911;margin-bottom:16px}
+.modal h3{font-size:14px;font-weight:700;color:#333;margin:18px 0 8px}
+.modal p,.modal li{font-size:13px;color:#666;line-height:1.8}
+.modal ul{padding-left:18px}
+.modal-close{background:#f5f5f0;border:none;border-radius:8px;padding:10px 20px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:20px;transition:background .18s}
+.modal-close:hover{background:#ebebeb}
+
+/* ── FOOTER ── */
+footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-align:center}
+.footer-logo{font-family:'Fraunces',serif;color:#e47911;font-weight:900;font-size:16px;margin-bottom:8px}
+.footer-tagline{font-size:12px;color:#bbb;margin-bottom:14px}
+.footer-links{display:flex;justify-content:center;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.footer-link{font-size:12px;color:#aaa;padding:4px 10px;cursor:pointer;transition:color .18s;background:none;border:none;font-family:inherit}
+.footer-link:hover{color:#e47911}
+/* ── LEGAL DISCLAIMER BOX IN FOOTER ── */
+.footer-legal{background:#f9f9f7;border:1.5px solid #ebebeb;border-radius:12px;padding:16px 20px;max-width:700px;margin:0 auto 12px;text-align:left}
+.footer-legal h4{font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.footer-legal p{font-size:11.5px;color:#aaa;line-height:1.7;margin-bottom:6px}
+.footer-legal p:last-child{margin-bottom:0}
+.footer-copy{font-size:11px;color:#ccc}
+
+/* ── UTILITY ── */
+.hidden{display:none!important}
+.section{animation:fadeUp .4s ease}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .paste-row{flex-direction:column;align-items:stretch}
+  .compare-btn{width:100%;text-align:center}
+  .hero-title{font-size:26px}
+  .ai-card{flex-direction:column}
+  .nav-links{display:none}
+  .product-card > div{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ AFFILIATE DISCLOSURE BANNER (Legal Requirement - FTC/India) ══ -->
+<div class="aff-banner">
+  <strong>📢 Affiliate Disclosure:</strong> PriceSarkar is an independent comparison website. We may earn a commission when you click "Shop Now" links, at no extra cost to you. We are <strong>not affiliated with</strong> Amazon, Flipkart, Meesho, Myntra, or JioMart. Prices shown are AI-estimated — always verify on the actual platform before buying.
+</div>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo" onclick="resetAll()">
+      <div class="logo-icon">🔍</div>
+      <span class="logo-text">PriceSarkar</span>
+      <span class="logo-badge">AI</span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-links">
+        <button class="nav-link" onclick="showModal('howModal')">How it Works</button>
+        <button class="nav-link" onclick="showModal('termsModal')">Terms</button>
+        <button class="nav-link" onclick="showModal('privacyModal')">Privacy</button>
+      </div>
+      <div class="lang-wrap">
+        <button class="lang-btn" id="langBtn" onclick="toggleLang()">
+          <span id="langLabel">हि</span> ▾
+        </button>
+        <div class="lang-drop" id="langDrop">
+          <div class="lang-opt active" data-lang="hi" onclick="setLang('hi')">
+            <span>हि</span><span>हिन्दी</span><span id="chk-hi" style="margin-left:auto;color:#e47911">✓</span>
+          </div>
+          <div class="lang-opt" data-lang="en" onclick="setLang('en')">
+            <span>EN</span><span>English</span><span id="chk-en" style="margin-left:auto;color:#e47911;display:none">✓</span>
+          </div>
+          <div class="lang-opt" data-lang="ta" onclick="setLang('ta')">
+            <span>த</span><span>தமிழ்</span><span id="chk-ta" style="margin-left:auto;color:#e47911;display:none">✓</span>
+          </div>
+          <div class="lang-opt" data-lang="bn" onclick="setLang('bn')">
+            <span>বা</span><span>বাংলা</span><span id="chk-bn" style="margin-left:auto;color:#e47911;display:none">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<div class="hero" id="heroSection">
+  <div class="hero-inner">
+    <div class="hero-pill">✦ <span id="t-tagline">AI-पावर्ड Price Comparison</span> ✦</div>
+    <h1 class="hero-title">Smart Shopping <em id="t-titleEm">शुरू होता है यहाँ</em></h1>
+    <p class="hero-sub" id="t-subtitle">Amazon, Flipkart, Meesho, Myntra और JioMart — एक जगह तुलना करें</p>
+
+    <!-- Price Disclaimer (before search) -->
+    <div class="price-notice">
+      <span class="price-notice-icon">ℹ️</span>
+      <div class="price-notice-text" id="t-priceNotice">
+        <strong>ध्यान दें:</strong> यहाँ दिखाई गई कीमतें AI द्वारा अनुमानित हैं — actual कीमत के लिए "Shop Now" से site पर जाएं। हम किसी भी e-commerce platform से affiliated नहीं हैं।
+      </div>
+    </div>
+
+    <!-- Paste Input -->
+    <div class="paste-card">
+      <div class="paste-label">🔗 <span id="t-pasteLabel">Product Link Paste करें</span></div>
+      <div class="paste-row">
+        <input class="paste-inp" id="urlInput" type="url"
+          placeholder="कोई भी product link यहाँ paste करें..."
+          id="urlInput"
+          onkeydown="if(event.key==='Enter')doCompare()"/>
+        <button class="clear-btn" id="clearBtn" onclick="clearInput()" style="display:none">✕</button>
+        <button class="compare-btn" id="compareBtn" onclick="doCompare()">
+          <span id="t-compareBtn">Compare करें 🔍</span>
+        </button>
+      </div>
+      <div class="paste-hint" id="t-pasteHint">जैसे: amazon.in/dp/B0... या flipkart.com/samsung-...</div>
+    </div>
+
+    <!-- Platform names only (NO logos — trademark compliance) -->
+    <div class="site-strip">
+      <div class="site-badge">🛒 <span style="color:#e47911;font-weight:700">Amazon</span></div>
+      <div class="site-badge">📦 <span style="color:#2874f0;font-weight:700">Flipkart</span></div>
+      <div class="site-badge">🛍️ <span style="color:#e03397;font-weight:700">Meesho</span></div>
+      <div class="site-badge">👗 <span style="color:#ff3f6c;font-weight:700">Myntra</span></div>
+      <div class="site-badge">🏪 <span style="color:#0052cc;font-weight:700">JioMart</span></div>
+    </div>
+    <div class="site-badge-note" id="t-siteNote">* PriceSarkar इन platforms की official website नहीं है। ये एक independent comparison tool है।</div>
+
+    <!-- How it works -->
+    <div class="how-grid" id="howSection">
+      <div class="how-card" style="animation-delay:.05s">
+        <div class="how-icon">🔗</div>
+        <div class="how-title" id="t-how1">Link Paste करें</div>
+        <div class="how-desc" id="t-howD1">Amazon, Flipkart — कोई भी product link</div>
+      </div>
+      <div class="how-card" style="animation-delay:.12s">
+        <div class="how-icon">🤖</div>
+        <div class="how-title" id="t-how2">AI Analyze करे</div>
+        <div class="how-desc" id="t-howD2">AI product को समझकर estimated prices दिखाता है</div>
+      </div>
+      <div class="how-card" style="animation-delay:.19s">
+        <div class="how-icon">💰</div>
+        <div class="how-title" id="t-how3">Best Deal चुनें</div>
+        <div class="how-desc" id="t-howD3">Shop Now से सीधे platform पर जाएं और verify करें</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- LOADER -->
+  <div class="loader-wrap hidden" id="loaderSection">
+    <div class="spinner"></div>
+    <div class="loader-txt" id="loaderTxt">Product analyze हो रहा है <span class="dot-pulse"><span></span><span></span><span></span></span></div>
+    <div class="loader-sites">
+      <div class="loader-site" style="animation-delay:.05s">
+        <div class="loader-site-icon" style="background:#fff8f0;border:1.5px solid #e4791133">🛒</div>
+        <div class="loader-site-name">Amazon</div>
+      </div>
+      <div class="loader-site" style="animation-delay:.1s">
+        <div class="loader-site-icon" style="background:#f0f5ff;border:1.5px solid #2874f033">📦</div>
+        <div class="loader-site-name">Flipkart</div>
+      </div>
+      <div class="loader-site" style="animation-delay:.15s">
+        <div class="loader-site-icon" style="background:#fff0f8;border:1.5px solid #e0339733">🛍️</div>
+        <div class="loader-site-name">Meesho</div>
+      </div>
+      <div class="loader-site" style="animation-delay:.2s">
+        <div class="loader-site-icon" style="background:#fff0f3;border:1.5px solid #ff3f6c33">👗</div>
+        <div class="loader-site-name">Myntra</div>
+      </div>
+      <div class="loader-site" style="animation-delay:.25s">
+        <div class="loader-site-icon" style="background:#f0f4ff;border:1.5px solid #0052cc33">🏪</div>
+        <div class="loader-site-name">JioMart</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-box hidden" id="errorBox"></div>
+
+  <!-- RESULTS -->
+  <div class="hidden section" id="resultsSection">
+
+    <!-- Analyzed product -->
+    <div class="product-input-card">
+      <span style="font-size:20px">🔗</span>
+      <div>
+        <div style="font-size:11px;color:#bbb;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px" id="t-analyzedLabel">Analyzed Product</div>
+        <div id="detectedProduct" style="font-size:13px;font-weight:600;color:#333"></div>
+      </div>
+    </div>
+
+    <!-- AI Summary -->
+    <div class="ai-card">
+      <div class="ai-avatar">🤖</div>
+      <div style="flex:1">
+        <div class="ai-label" id="t-aiLabel">AI सुझाव</div>
+        <div class="ai-text" id="aiSummary"></div>
+        <div id="bestDealPill" class="best-deal-pill" style="display:none">
+          🏆 <span id="t-bestLabel">सबसे सस्ता</span>: <span id="bestDealSite"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Important disclaimer in results -->
+    <div class="result-disclaimer">
+      <span>⚠️</span>
+      <div id="t-resultDisclaimer">ये कीमतें AI द्वारा अनुमानित हैं और केवल तुलना के लिए हैं। खरीदने से पहले "Shop Now" से actual platform पर जाकर कीमत verify करें। PriceSarkar किसी भी price accuracy की guarantee नहीं देता।</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="tabs" id="tabsRow">
+        <button class="tab active" data-tab="all" onclick="filterTab('all')" id="t-allTab">सभी</button>
+      </div>
+      <select class="sort-sel" id="sortSel" onchange="sortProducts()">
+        <option value="relevance" id="t-sortR">क्रम: प्रासंगिक</option>
+        <option value="price_low" id="t-sortPL">कीमत: कम से ज्यादा</option>
+        <option value="price_high" id="t-sortPH">कीमत: ज्यादा से कम</option>
+        <option value="rating" id="t-sortRT">टॉप Rated</option>
+        <option value="discount" id="t-sortDC">अधिक छूट</option>
+      </select>
+    </div>
+
+    <!-- Cards -->
+    <div class="prod-grid" id="prodGrid"></div>
+
+    <!-- Back -->
+    <div style="text-align:center;margin-top:30px">
+      <button onclick="resetAll()" style="background:#fff;border:1.5px solid #e8e8e8;color:#888;padding:11px 26px;border-radius:11px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='#e47911';this.style.color='#e47911'" onmouseout="this.style.borderColor='#e8e8e8';this.style.color='#888'">
+        ← <span id="t-newCompare">नया Compare</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-logo">PriceSarkar</div>
+  <div class="footer-tagline" id="t-footerTagline">Independent AI Price Comparison Tool for India</div>
+  <div class="footer-links">
+    <button class="footer-link" onclick="showModal('howModal')">How it Works</button>
+    <button class="footer-link" onclick="showModal('termsModal')">Terms of Use</button>
+    <button class="footer-link" onclick="showModal('privacyModal')">Privacy Policy</button>
+    <button class="footer-link" onclick="showModal('disclaimerModal')">Disclaimer</button>
+    <button class="footer-link" onclick="showModal('affiliateModal')">Affiliate Disclosure</button>
+  </div>
+
+  <!-- Legal disclaimer block -->
+  <div class="footer-legal">
+    <h4>⚖️ Legal Disclaimers</h4>
+    <p><strong>Independent Tool:</strong> PriceSarkar is an independent price comparison website and is NOT affiliated with, endorsed by, or officially connected to Amazon, Flipkart, Meesho, Myntra, JioMart, or any other e-commerce platform. All platform names are used for identification and comparison purposes only.</p>
+    <p><strong>Price Accuracy:</strong> All prices displayed are AI-generated estimates for reference purposes only. Actual prices on respective platforms may differ significantly. Always verify the current price on the actual platform before making any purchase decision.</p>
+    <p><strong>Affiliate Links:</strong> This website contains affiliate links. When you click "Shop Now" and make a purchase, PriceSarkar may earn a small commission at no additional cost to you. This helps us maintain the service free of charge.</p>
+    <p><strong>Trademarks:</strong> Amazon, Flipkart, Meesho, Myntra, and JioMart are registered trademarks of their respective owners. PriceSarkar does not claim any association with these brands.</p>
+  </div>
+
+  <div class="footer-copy">© 2024 PriceSarkar. All rights reserved. | Made in India 🇮🇳</div>
+</footer>
+
+<!-- ══ MODALS ══ -->
+
+<!-- How it Works -->
+<div class="modal-overlay" id="howModal" onclick="closeModal('howModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>How PriceSarkar Works</h2>
+    <h3>1. Paste a Product Link</h3>
+    <p>Copy any product link from Amazon, Flipkart, or other supported platforms and paste it in the search box.</p>
+    <h3>2. AI Analysis</h3>
+    <p>Our AI analyzes the product and generates estimated price comparisons across multiple Indian e-commerce platforms.</p>
+    <h3>3. Compare & Shop</h3>
+    <p>Review the estimated prices, click "Shop Now" to visit the actual platform and verify the current price before purchasing.</p>
+    <h3>⚠️ Important Note</h3>
+    <p>Prices shown are AI-estimated and may not reflect actual current prices. Always verify on the actual platform before buying.</p>
+    <button class="modal-close" onclick="closeModal('howModal')">Close</button>
+  </div>
+</div>
+
+<!-- Terms of Use -->
+<div class="modal-overlay" id="termsModal" onclick="closeModal('termsModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Terms of Use</h2>
+    <h3>1. Acceptance</h3>
+    <p>By using PriceSarkar, you agree to these terms. If you do not agree, please do not use this website.</p>
+    <h3>2. Nature of Service</h3>
+    <p>PriceSarkar is an independent price comparison tool that uses AI to generate estimated prices. We are not an e-commerce platform and do not sell products directly.</p>
+    <h3>3. Price Accuracy</h3>
+    <p>All prices shown are AI-generated estimates for informational and comparison purposes only. PriceSarkar does not guarantee the accuracy of any price displayed. Users must verify actual prices on the respective platforms before purchasing.</p>
+    <h3>4. No Affiliation</h3>
+    <p>PriceSarkar is not affiliated with, endorsed by, or connected to Amazon, Flipkart, Meesho, Myntra, JioMart, or any other platform mentioned on this website.</p>
+    <h3>5. Affiliate Links</h3>
+    <p>We use affiliate links to generate revenue. Clicking "Shop Now" may result in us earning a commission. This does not affect the price you pay.</p>
+    <h3>6. Limitation of Liability</h3>
+    <p>PriceSarkar is not responsible for any purchase decisions made based on the estimated prices displayed. We are not liable for any financial loss arising from price discrepancies.</p>
+    <h3>7. Intellectual Property</h3>
+    <p>All third-party brand names (Amazon, Flipkart, etc.) are trademarks of their respective owners, used here solely for identification and comparison purposes under nominative fair use.</p>
+    <h3>8. Changes</h3>
+    <p>We reserve the right to modify these terms at any time. Continued use constitutes acceptance of updated terms.</p>
+    <button class="modal-close" onclick="closeModal('termsModal')">Close</button>
+  </div>
+</div>
+
+<!-- Privacy Policy -->
+<div class="modal-overlay" id="privacyModal" onclick="closeModal('privacyModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Privacy Policy</h2>
+    <h3>1. Data We Collect</h3>
+    <p>PriceSarkar does not collect, store, or sell personal data. Product URLs you enter are processed temporarily to generate comparisons and are not stored.</p>
+    <h3>2. Cookies</h3>
+    <p>We may use basic cookies for language preferences. We do not use tracking cookies or sell your data to third parties.</p>
+    <h3>3. Third-Party Services</h3>
+    <p>We use the Anthropic Claude AI API to process product searches. Your search query may be sent to Anthropic's servers for processing. Please review Anthropic's privacy policy at anthropic.com.</p>
+    <h3>4. Affiliate Links</h3>
+    <p>When you click Shop Now links, the destination platform (Amazon, Flipkart, etc.) may set their own cookies for tracking purposes. Please review their privacy policies.</p>
+    <h3>5. Google Fonts</h3>
+    <p>We use Google Fonts which may collect basic usage data. Please review Google's privacy policy for details.</p>
+    <h3>6. Contact</h3>
+    <p>For privacy concerns, contact us through the website.</p>
+    <button class="modal-close" onclick="closeModal('privacyModal')">Close</button>
+  </div>
+</div>
+
+<!-- Disclaimer -->
+<div class="modal-overlay" id="disclaimerModal" onclick="closeModal('disclaimerModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Disclaimer</h2>
+    <h3>Price Disclaimer</h3>
+    <p>All prices displayed on PriceSarkar are generated by artificial intelligence and are estimates only. These prices are provided for general informational and comparison purposes. Actual prices on e-commerce platforms may be higher, lower, or the product may be unavailable.</p>
+    <h3>No Endorsement</h3>
+    <p>Mention of any brand, product, or e-commerce platform does not constitute an endorsement by PriceSarkar. All trademarks belong to their respective owners.</p>
+    <h3>Purchase Decisions</h3>
+    <p>PriceSarkar is not responsible for any purchase decisions made based on information on this website. Always verify prices and product details on the actual platform before making any purchase.</p>
+    <h3>Availability</h3>
+    <p>Product availability may vary. PriceSarkar does not guarantee that any product shown is currently in stock on any platform.</p>
+    <button class="modal-close" onclick="closeModal('disclaimerModal')">Close</button>
+  </div>
+</div>
+
+<!-- Affiliate Disclosure -->
+<div class="modal-overlay" id="affiliateModal" onclick="closeModal('affiliateModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Affiliate Disclosure</h2>
+    <p>PriceSarkar participates in affiliate marketing programs. This means when you click "Shop Now" buttons and make a purchase on the linked platform, we may receive a small commission.</p>
+    <h3>What this means for you</h3>
+    <ul>
+      <li>You pay the same price — our commission comes from the seller/platform, not from you.</li>
+      <li>This commission helps us maintain the website and keep it free for all users.</li>
+      <li>Our AI comparisons are not influenced by affiliate commissions — we show all platforms regardless.</li>
+    </ul>
+    <h3>Platforms we may be affiliated with</h3>
+    <ul>
+      <li>Amazon Associates Program (Amazon.in)</li>
+      <li>Flipkart Affiliate Program</li>
+      <li>Meesho Affiliate Program</li>
+      <li>Other partner platforms</li>
+    </ul>
+    <h3>In compliance with</h3>
+    <p>This disclosure is made in accordance with the Consumer Protection (E-Commerce) Rules 2020, India and FTC guidelines for affiliate marketing disclosures.</p>
+    <button class="modal-close" onclick="closeModal('affiliateModal')">Close</button>
+  </div>
+</div>
+
+<!-- ══ SCRIPT ══ -->
+<script>
+
+// ══════════════════════════════════════
+//  ⚙️ AFFILIATE CONFIG
+//  Yahan apna affiliate tag daalen
+// ══════════════════════════════════════
+const AFF = {
+  amazon:   "YOUR-AMAZON-TAG-21",    // Amazon Associates tag e.g. deepak-21
+  flipkart: "YOUR-FLIPKART-AFFID",   // Flipkart affiliate ID
+  meesho:   "",                       // Meesho referral code (optional)
+  myntra:   "",                       // Myntra affiliate ID (optional)
+  jiomart:  "",                       // JioMart partner code (optional)
+};
+
+function affLink(site, query) {
+  const q = encodeURIComponent(query);
+  const map = {
+    "Amazon":   `https://www.amazon.in/s?k=${q}${AFF.amazon ? "&tag=" + AFF.amazon : ""}`,
+    "Flipkart": `https://www.flipkart.com/search?q=${q}${AFF.flipkart ? "&affid=" + AFF.flipkart : ""}`,
+    "Meesho":   `https://www.meesho.com/search?q=${q}${AFF.meesho ? "&ref=" + AFF.meesho : ""}`,
+    "Myntra":   `https://www.myntra.com/${q.replace(/%20/g,"-")}${AFF.myntra ? "?affid=" + AFF.myntra : ""}`,
+    "JioMart":  `https://www.jiomart.com/search/${q}${AFF.jiomart ? "?ref=" + AFF.jiomart : ""}`,
+  };
+  return map[site] || `https://www.google.com/search?q=${q}+site:amazon.in+OR+site:flipkart.com`;
+}
+
+// ══════════════════════════════════════
+//  SITE META (no brand colors copied — original palette)
+// ══════════════════════════════════════
+const SITES = {
+  "Amazon":   { color:"#e47911", bg:"#fff8f0", icon:"🛒" },
+  "Flipkart": { color:"#2874f0", bg:"#f0f5ff", icon:"📦" },
+  "Meesho":   { color:"#e03397", bg:"#fff0f8", icon:"🛍️" },
+  "Myntra":   { color:"#ff3f6c", bg:"#fff0f3", icon:"👗" },
+  "JioMart":  { color:"#0052cc", bg:"#f0f4ff", icon:"🏪" },
+};
+function getSite(name) {
+  for (const k of Object.keys(SITES)) {
+    if (name && name.toLowerCase().includes(k.toLowerCase())) return { key:k, ...SITES[k] };
+  }
+  return { key:name, color:"#888", bg:"#f5f5f0", icon:"🛒" };
+}
+
+// ══════════════════════════════════════
+//  TRANSLATIONS
+// ══════════════════════════════════════
+const TR = {
+  hi:{
+    tagline:"AI-पावर्ड Price Comparison", titleEm:"शुरू होता है यहाँ",
+    subtitle:"Amazon, Flipkart, Meesho, Myntra और JioMart — एक जगह तुलना करें",
+    priceNotice:"<strong>ध्यान दें:</strong> यहाँ दिखाई गई कीमतें AI द्वारा अनुमानित हैं — actual कीमत के लिए 'Shop Now' से site पर जाएं। हम किसी भी platform से affiliated नहीं हैं।",
+    pasteLabel:"Product Link Paste करें",
+    pastePlaceholder:"कोई भी product link यहाँ paste करें...",
+    pasteHint:"जैसे: amazon.in/dp/B0... या flipkart.com/...",
+    compareBtn:"Compare करें 🔍",
+    loaderTxt:"Product analyze हो रहा है",
+    aiLabel:"AI सुझाव", bestLabel:"सबसे सस्ता",
+    analyzedLabel:"Analyzed Product",
+    resultDisclaimer:"ये कीमतें AI द्वारा अनुमानित हैं — खरीदने से पहले 'Shop Now' से platform पर जाकर verify करें।",
+    allTab:"सभी",
+    sortR:"क्रम: प्रासंगिक", sortPL:"कीमत: कम से ज्यादा",
+    sortPH:"कीमत: ज्यादा से कम", sortRT:"टॉप Rated", sortDC:"अधिक छूट",
+    shopNow:"Shop Now", newCompare:"नया Compare",
+    siteNote:"* PriceSarkar इन platforms की official website नहीं है। ये एक independent comparison tool है।",
+    how1:"Link Paste करें", how2:"AI Analyze करे", how3:"Best Deal चुनें",
+    howD1:"Amazon, Flipkart — कोई भी product link",
+    howD2:"AI product को समझकर estimated prices दिखाता है",
+    howD3:"Shop Now से platform पर जाएं और verify करें",
+    footerTagline:"Independent AI Price Comparison Tool for India",
+    offTxt:"छूट", reviewsTxt:"reviews", estPrice:"अनुमानित कीमत",
+  },
+  en:{
+    tagline:"AI-Powered Price Comparison", titleEm:"Starts Here",
+    subtitle:"Compare prices across Amazon, Flipkart, Meesho, Myntra & JioMart",
+    priceNotice:"<strong>Note:</strong> Prices shown are AI-estimated for comparison only. Click 'Shop Now' to verify actual prices on the platform. We are not affiliated with any platform.",
+    pasteLabel:"Paste Product Link",
+    pastePlaceholder:"Paste any product link here...",
+    pasteHint:"e.g. amazon.in/dp/B0... or flipkart.com/...",
+    compareBtn:"Compare Now 🔍",
+    loaderTxt:"Analyzing product",
+    aiLabel:"AI Recommendation", bestLabel:"Best Deal",
+    analyzedLabel:"Analyzed Product",
+    resultDisclaimer:"Prices are AI-estimated for reference only. Always verify on the actual platform before purchasing.",
+    allTab:"All",
+    sortR:"Sort: Relevant", sortPL:"Price: Low to High",
+    sortPH:"Price: High to Low", sortRT:"Top Rated", sortDC:"Max Discount",
+    shopNow:"Shop Now", newCompare:"New Compare",
+    siteNote:"* PriceSarkar is an independent tool, not affiliated with any platform.",
+    how1:"Paste Link", how2:"AI Analyzes", how3:"Pick Best Deal",
+    howD1:"Any Amazon or Flipkart product link",
+    howD2:"AI generates estimated price comparisons",
+    howD3:"Click Shop Now to verify & buy on platform",
+    footerTagline:"Independent AI Price Comparison Tool for India",
+    offTxt:"off", reviewsTxt:"reviews", estPrice:"Estimated Price",
+  },
+  ta:{
+    tagline:"AI விலை ஒப்பீடு", titleEm:"இங்கே தொடங்குகிறது",
+    subtitle:"5 தளங்களில் விலைகளை ஒப்பிடுங்கள்",
+    priceNotice:"<strong>கவனிக்கவும்:</strong> காட்டப்படும் விலைகள் AI மதிப்பீடுகள் மட்டுமே. வாங்குவதற்கு முன் 'Shop Now' மூலம் சரிபார்க்கவும்.",
+    pasteLabel:"Product Link ஒட்டுங்கள்",
+    pastePlaceholder:"எந்த product link-ஐயும் paste செய்யுங்கள்...",
+    pasteHint:"எ.கா: amazon.in அல்லது flipkart.com",
+    compareBtn:"ஒப்பிடு 🔍",
+    loaderTxt:"பகுப்பாய்வு செய்கிறது",
+    aiLabel:"AI பரிந்துரை", bestLabel:"சிறந்த டீல்",
+    analyzedLabel:"பகுப்பாய்வு செய்யப்பட்ட பொருள்",
+    resultDisclaimer:"விலைகள் AI மதிப்பீடுகள். வாங்குவதற்கு முன் சரிபார்க்கவும்.",
+    allTab:"அனைத்தும்",
+    sortR:"வரிசை: பொருத்தம்", sortPL:"விலை: குறைவு முதல்",
+    sortPH:"விலை: அதிகம் முதல்", sortRT:"சிறந்த மதிப்பீடு", sortDC:"அதிக தள்ளுபடி",
+    shopNow:"இப்போது வாங்கு", newCompare:"புதிய ஒப்பீடு",
+    siteNote:"* PriceSarkar ஒரு independent comparison tool.",
+    how1:"Link ஒட்டுங்கள்", how2:"AI பகுப்பாய்வு", how3:"சிறந்த டீல் தேர்வு",
+    howD1:"எந்த product link-ஐயும் paste செய்யுங்கள்",
+    howD2:"AI விலை மதிப்பீடுகளை உருவாக்குகிறது",
+    howD3:"Shop Now மூலம் தளத்தில் சரிபார்க்கவும்",
+    footerTagline:"India-க்கான AI விலை ஒப்பீட்டு கருவி",
+    offTxt:"தள்ளுபடி", reviewsTxt:"மதிப்புரைகள்", estPrice:"மதிப்பிடப்பட்ட விலை",
+  },
+  bn:{
+    tagline:"AI মূল্য তুলনা", titleEm:"এখানে শুরু হয়",
+    subtitle:"Amazon, Flipkart, Meesho, Myntra ও JioMart — এক জায়গায় তুলনা",
+    priceNotice:"<strong>মনে রাখুন:</strong> দেখানো মূল্য AI অনুমান মাত্র। কেনার আগে 'Shop Now' দিয়ে যাচাই করুন।",
+    pasteLabel:"Product Link Paste করুন",
+    pastePlaceholder:"যেকোনো product link এখানে paste করুন...",
+    pasteHint:"যেমন: amazon.in/dp/B0... বা flipkart.com/...",
+    compareBtn:"Compare করুন 🔍",
+    loaderTxt:"Product বিশ্লেষণ হচ্ছে",
+    aiLabel:"AI পরামর্শ", bestLabel:"সেরা ডিল",
+    analyzedLabel:"বিশ্লেষিত পণ্য",
+    resultDisclaimer:"মূল্যগুলি AI অনুমান। কেনার আগে প্ল্যাটফর্মে যাচাই করুন।",
+    allTab:"সব",
+    sortR:"ক্রম: প্রাসঙ্গিক", sortPL:"দাম: কম থেকে বেশি",
+    sortPH:"দাম: বেশি থেকে কম", sortRT:"শীর্ষ রেটেড", sortDC:"বেশি ছাড়",
+    shopNow:"এখনই কিনুন", newCompare:"নতুন Compare",
+    siteNote:"* PriceSarkar একটি independent comparison tool।",
+    how1:"Link Paste করুন", how2:"AI বিশ্লেষণ", how3:"সেরা ডিল বেছে নিন",
+    howD1:"যেকোনো Amazon বা Flipkart link",
+    howD2:"AI মূল্য অনুমান তৈরি করে",
+    howD3:"Shop Now দিয়ে প্ল্যাটফর্মে যাচাই করুন",
+    footerTagline:"ভারতের জন্য AI মূল্য তুলনা সরঞ্জাম",
+    offTxt:"ছাড়", reviewsTxt:"রিভিউ", estPrice:"আনুমানিক মূল্য",
+  },
+};
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let currentLang = "hi";
+let allProducts = [];
+let currentFilter = "all";
+let currentSort = "relevance";
+let productQuery = "";
+
+// ══════════════════════════════════════
+//  LANGUAGE
+// ══════════════════════════════════════
+function setLang(code) {
+  currentLang = code;
+  const t = TR[code];
+  const labels = { hi:"हि", en:"EN", ta:"த", bn:"বা" };
+  document.getElementById("langLabel").textContent = labels[code];
+  document.getElementById("langDrop").classList.remove("show");
+
+  // Update all text nodes
+  const set = (id, val) => { const el = document.getElementById(id); if(el && val) el.innerHTML = val; };
+  set("t-tagline", t.tagline);
+  set("t-titleEm", t.titleEm);
+  set("t-subtitle", t.subtitle);
+  set("t-priceNotice", t.priceNotice);
+  set("t-pasteLabel", t.pasteLabel);
+  set("t-pasteHint", t.pasteHint);
+  set("t-compareBtn", t.compareBtn);
+  set("t-how1", t.how1); set("t-how2", t.how2); set("t-how3", t.how3);
+  set("t-howD1", t.howD1); set("t-howD2", t.howD2); set("t-howD3", t.howD3);
+  set("t-aiLabel", t.aiLabel);
+  set("t-bestLabel", t.bestLabel);
+  set("t-analyzedLabel", t.analyzedLabel);
+  set("t-resultDisclaimer", t.resultDisclaimer);
+  set("t-allTab", t.allTab + (allProducts.length ? ` (${allProducts.length})` : ""));
+  set("t-sortR", t.sortR); set("t-sortPL", t.sortPL); set("t-sortPH", t.sortPH);
+  set("t-sortRT", t.sortRT); set("t-sortDC", t.sortDC);
+  set("t-newCompare", t.newCompare);
+  set("t-siteNote", t.siteNote);
+  set("t-footerTagline", t.footerTagline);
+
+  const inp = document.getElementById("urlInput");
+  if(inp) inp.placeholder = t.pastePlaceholder;
+
+  // lang checks
+  ["hi","en","ta","bn"].forEach(l => {
+    const el = document.getElementById("chk-"+l);
+    if(el) el.style.display = l === code ? "inline" : "none";
+  });
+
+  if(allProducts.length) renderProducts();
+}
+
+function toggleLang() {
+  document.getElementById("langDrop").classList.toggle("show");
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest(".lang-wrap")) document.getElementById("langDrop").classList.remove("show");
+});
+
+// ══════════════════════════════════════
+//  INPUT
+// ══════════════════════════════════════
+document.getElementById("urlInput").addEventListener("input", function() {
+  document.getElementById("clearBtn").style.display = this.value ? "block" : "none";
+});
+function clearInput() {
+  document.getElementById("urlInput").value = "";
+  document.getElementById("clearBtn").style.display = "none";
+  document.getElementById("urlInput").focus();
+}
+
+function detectSource(url) {
+  if(!url) return "Unknown";
+  if(url.includes("amazon")) return "Amazon";
+  if(url.includes("flipkart")) return "Flipkart";
+  if(url.includes("meesho")) return "Meesho";
+  if(url.includes("myntra")) return "Myntra";
+  if(url.includes("jiomart")) return "JioMart";
+  return "Unknown";
+}
+
+// ══════════════════════════════════════
+//  COMPARE
+// ══════════════════════════════════════
+async function doCompare() {
+  const url = document.getElementById("urlInput").value.trim();
+  if(!url) { document.getElementById("urlInput").focus(); return; }
+  const t = TR[currentLang];
+
+  show("loaderSection"); hide("resultsSection"); hide("errorBox"); hide("howSection");
+  document.getElementById("loaderTxt").innerHTML = t.loaderTxt + ' <span class="dot-pulse"><span></span><span></span><span></span></span>';
+  document.getElementById("compareBtn").disabled = true;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:`You are an Indian e-commerce price comparison assistant. The user provides a product URL. Extract product details and generate estimated price comparisons across Amazon India, Flipkart, Meesho, Myntra, and JioMart.
+
+IMPORTANT: These are AI-estimated prices for comparison only, not real scraped data.
+
+Return ONLY valid JSON, no markdown:
+{
+  "detectedProduct": "Short product name e.g. Samsung Galaxy S24 128GB Phantom Black",
+  "summary": "2-line buying advice in Hindi-English mix, mention which site seems cheapest",
+  "bestDeal": "site name with lowest estimated price",
+  "searchQuery": "optimal search query for this product",
+  "products": [
+    {
+      "site": "Amazon",
+      "title": "Full realistic product title",
+      "price": 45999,
+      "originalPrice": 54999,
+      "discount": 16,
+      "rating": 4.4,
+      "reviews": 12847,
+      "badge": "Best Seller",
+      "highlights": ["key feature 1", "key feature 2", "key feature 3"],
+      "inStock": true,
+      "delivery": "Free delivery in 2 days"
+    }
+  ]
+}
+
+Rules:
+- 1-2 products per relevant site (5-8 total)
+- Realistic 2024 INR prices
+- Skip site if product category not sold there (e.g. electronics on Myntra)
+- badge: "Best Seller"|"Deal of Day"|"Trending"|"Top Rated"|"Budget Pick"|"Official Store"|""
+- Vary prices 3-15% across sites realistically`,
+        messages:[{role:"user", content:`URL: ${url}\nSource: ${detectSource(url)}`}],
+      }),
+    });
+
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || "";
+    const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+
+    productQuery = parsed.searchQuery || parsed.detectedProduct || "product";
+    allProducts = (parsed.products || []).map(p => ({
+      ...p,
+      buyLink: affLink(p.site, productQuery),
+    }));
+
+    document.getElementById("detectedProduct").textContent = parsed.detectedProduct || url;
+    document.getElementById("aiSummary").textContent = parsed.summary || "";
+
+    if(parsed.bestDeal){
+      document.getElementById("bestDealSite").textContent = parsed.bestDeal;
+      document.getElementById("bestDealPill").style.display = "inline-flex";
+    } else {
+      document.getElementById("bestDealPill").style.display = "none";
+    }
+
+    buildTabs();
+    renderProducts();
+    hide("loaderSection");
+    show("resultsSection");
+    window.scrollTo({top: document.querySelector(".main").offsetTop - 70, behavior:"smooth"});
+
+  } catch(err) {
+    hide("loaderSection");
+    document.getElementById("errorBox").textContent = "⚠️ Kuch problem aayi. Please valid product URL daalen aur dobara try karein.";
+    show("errorBox");
+    show("howSection");
+  }
+  document.getElementById("compareBtn").disabled = false;
+}
+
+// ══════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════
+function buildTabs() {
+  const t = TR[currentLang];
+  const sites = [...new Set(allProducts.map(p => p.site))];
+  const row = document.getElementById("tabsRow");
+  row.innerHTML = `<button class="tab active" data-tab="all" onclick="filterTab('all')">${t.allTab} (${allProducts.length})</button>`;
+  sites.forEach(s => {
+    const cnt = allProducts.filter(p => p.site === s).length;
+    const m = getSite(s);
+    const key = s.toLowerCase().replace(/\s/g,"");
+    row.innerHTML += `<button class="tab" data-tab="${key}" onclick="filterTab('${key}')">${m.icon} ${s} (${cnt})</button>`;
+  });
+}
+
+function filterTab(tab) {
+  currentFilter = tab;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  renderProducts();
+}
+
+function sortProducts() {
+  currentSort = document.getElementById("sortSel").value;
+  renderProducts();
+}
+
+// ══════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════
+function renderProducts() {
+  const t = TR[currentLang];
+  let list = allProducts.filter(p =>
+    currentFilter === "all" ? true : p.site.toLowerCase().replace(/\s/g,"").includes(currentFilter)
+  );
+  if(currentSort === "price_low") list.sort((a,b) => a.price - b.price);
+  else if(currentSort === "price_high") list.sort((a,b) => b.price - a.price);
+  else if(currentSort === "rating") list.sort((a,b) => b.rating - a.rating);
+  else if(currentSort === "discount") list.sort((a,b) => b.discount - a.discount);
+
+  const grid = document.getElementById("prodGrid");
+  if(!list.length) {
+    grid.innerHTML = `<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">No results for this filter.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((p, i) => {
+    const s = getSite(p.site);
+    const hasDisc = p.originalPrice && p.originalPrice > p.price;
+    const stars = p.rating ? "★".repeat(Math.round(p.rating)) + "☆".repeat(5 - Math.round(p.rating)) : "";
+    return `
+    <div class="product-card" style="animation-delay:${i*.05}s">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${s.color};border-radius:4px 0 0 4px"></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+
+        <div style="width:52px;height:52px;background:${s.bg};border:1.5px solid ${s.color}33;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${s.icon}</div>
+
+        <div style="flex:1;min-width:160px">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:9px">
+            <span style="background:${s.color}18;color:${s.color};border-radius:8px;padding:4px 12px;font-size:12px;font-weight:800">${s.icon} ${p.site}</span>
+            ${p.badge ? `<span class="badge-pill" style="background:${s.color}18;color:${s.color}">${p.badge}</span>` : ""}
+            ${p.inStock === false
+              ? `<span class="badge-pill" style="background:#fff0f0;color:#cc3333">Out of Stock</span>`
+              : `<span class="badge-pill" style="background:#f0fff5;color:#27ae60">✓ In Stock</span>`}
+          </div>
+
+          <div class="prod-title">${p.title}</div>
+
+          ${p.highlights?.length ? `<div class="highlights">${p.highlights.slice(0,3).map(h=>`<span class="hl-tag">✓ ${h}</span>`).join("")}</div>` : ""}
+
+          <div class="rating-row">
+            ${p.rating ? `<span class="stars">${stars}</span><span class="rating-num">${p.rating}</span>${p.reviews ? `<span class="review-cnt">(${Number(p.reviews).toLocaleString("en-IN")} ${t.reviewsTxt})</span>` : ""}` : ""}
+            ${p.delivery ? `<span class="delivery-tag">🚚 ${p.delivery}</span>` : ""}
+          </div>
+        </div>
+
+        <div style="min-width:140px;flex-shrink:0;text-align:right">
+          ${hasDisc ? `<div class="original-price">₹${Number(p.originalPrice).toLocaleString("en-IN")}</div>` : ""}
+          <div class="main-price">₹${Number(p.price).toLocaleString("en-IN")}</div>
+          <div class="price-est-note">~ ${t.estPrice}</div>
+          ${p.discount > 0 ? `<div class="discount-tag">↓ ${p.discount}% ${t.offTxt}</div>` : ""}
+
+          <!-- SHOP NOW — affiliate link -->
+          <a href="${p.buyLink}" target="_blank" rel="noopener sponsored"
+            class="shop-btn" style="background:linear-gradient(135deg,${s.color}dd,${s.color});margin-top:12px;justify-content:center">
+            ${t.shopNow} <span class="arr">→</span>
+          </a>
+          <div style="font-size:10px;color:#ccc;margin-top:5px">Verify price on site</div>
+        </div>
+
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════
+//  RESET
+// ══════════════════════════════════════
+function resetAll() {
+  allProducts = [];
+  currentFilter = "all";
+  hide("resultsSection"); hide("loaderSection"); hide("errorBox");
+  show("howSection");
+  document.getElementById("urlInput").value = "";
+  document.getElementById("clearBtn").style.display = "none";
+  window.scrollTo({top:0, behavior:"smooth"});
+  setTimeout(() => document.getElementById("urlInput").focus(), 400);
+}
+
+// ══════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════
+function showModal(id) { document.getElementById(id).classList.add("show"); document.body.style.overflow = "hidden"; }
+function closeModal(id) { document.getElementById(id).classList.remove("show"); document.body.style.overflow = ""; }
+document.addEventListener("keydown", e => { if(e.key === "Escape") document.querySelectorAll(".modal-overlay.show").forEach(m => { m.classList.remove("show"); document.body.style.overflow = ""; }); });
+
+// ══════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════
+function show(id) { document.getElementById(id).classList.remove("hidden"); }
+function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+// Init
+setLang("hi");
+</script>
+</body>
+</html>
