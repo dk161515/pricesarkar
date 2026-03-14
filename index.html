@@ -524,11 +524,13 @@ footer{background:#fff;border-top:1.5px solid #ebebeb;padding:28px 20px;text-ali
 <script>
 
 // ╔══════════════════════════════════════════════════════╗
-//  🔑  STEP 1 — GEMINI API KEY YAHAN DAALEN
-//  FREE key lene ke liye: https://aistudio.google.com
-//  "Get API Key" → "Create API Key" → copy karein
+//  🔑  STEP 1 — GROQ API KEY YAHAN DAALEN (BILKUL FREE)
+//  1. https://console.groq.com pe jaao
+//  2. Sign up karo (Google se bhi ho sakta hai)
+//  3. API Keys → Create API Key → copy karo
+//  Free tier: 14,400 requests/day — koi credit card nahi chahiye!
 // ╚══════════════════════════════════════════════════════╝
-const GEMINI_API_KEY = "AIzaSyCwAPhr6ldUuB5YzLhVII40JIntGCjSjrg";   // 👈 "AIzaSy..." key yahan paste karein
+const GROQ_API_KEY = "";   // 👈 "gsk_..." key yahan paste karein
 
 // ╔══════════════════════════════════════════════════════╗
 //  🛒  STEP 2 — AFFILIATE IDs YAHAN DAALEN
@@ -538,7 +540,7 @@ const GEMINI_API_KEY = "AIzaSyCwAPhr6ldUuB5YzLhVII40JIntGCjSjrg";   // 👈 "AIz
 const AFF = {
   // Amazon Associates: https://affiliate-program.amazon.in
   // Tag format: "yourname-21"  (India ke liye -21 hota hai)
-  amazon:   "fitwithdk-21",   // 👈 e.g. "ramesh-21"
+  amazon:   "",   // 👈 e.g. "ramesh-21"
 
   // Flipkart Affiliate: https://affiliate.flipkart.com
   flipkart: "",   // 👈 e.g. "fk_affiliate_12345"
@@ -773,20 +775,18 @@ async function doCompare() {
   const url = document.getElementById("urlInput").value.trim();
   if (!url) { document.getElementById("urlInput").focus(); return; }
 
-  // URL basic validation
   if (!url.startsWith("http")) {
     const eb = document.getElementById("errorBox");
-    eb.innerHTML = "⚠️ Valid product URL daalen — <strong>http://</strong> ya <strong>https://</strong> se shuru hona chahiye.";
+    eb.innerHTML = "⚠️ Valid product URL daalen — https:// se shuru hona chahiye.";
     show("errorBox"); return;
   }
 
-  // API Key check
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 10) {
+  if (!GROQ_API_KEY || GROQ_API_KEY.length < 10) {
     const eb = document.getElementById("errorBox");
-    eb.innerHTML = `⚠️ <strong>Gemini API Key setup baaki hai!</strong><br>
-      index.html mein sabse upar <code>GEMINI_API_KEY</code> mein apni free key daalen.<br>
-      🔗 Free key yahan milegi: <a href="https://aistudio.google.com" target="_blank" style="color:#e47911;font-weight:700">aistudio.google.com</a>
-      &rarr; Get API Key &rarr; Create API Key`;
+    eb.innerHTML = `⚠️ <strong>Groq API Key setup baaki hai!</strong><br>
+      index.html mein sabse upar <code>GROQ_API_KEY</code> mein apni free key daalen.<br>
+      🔗 Free key: <a href="https://console.groq.com" target="_blank" style="color:#e47911;font-weight:700">console.groq.com</a>
+      → API Keys → Create API Key`;
     show("errorBox"); return;
   }
 
@@ -827,24 +827,26 @@ Rules:
 - 1-2 products per relevant site (5-8 total)
 - Realistic current INR prices
 - Skip site if product category not sold there (e.g. skip Myntra for electronics)
-- badge options: "Best Seller"|"Deal of Day"|"Trending"|"Top Rated"|"Budget Pick"|"Official Store"|""
+- badge: "Best Seller"|"Deal of Day"|"Trending"|"Top Rated"|"Budget Pick"|"Official Store"|""
 - Vary prices 3-15% across sites realistically
 
 URL: ${url}
 Source platform: ${detectSource(url)}`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 },
-        }),
-      }
-    );
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1500,
+      }),
+    });
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -852,18 +854,21 @@ Source platform: ${detectSource(url)}`;
     }
 
     const data = await res.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const raw = data?.choices?.[0]?.message?.content || "";
     if (!raw) throw new Error("AI se koi response nahi mila. Dobara try karein.");
 
     let parsed;
     try {
-      parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+      // JSON extract karna — kabhi kabhi AI extra text deta hai
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON found");
+      parsed = JSON.parse(jsonMatch[0]);
     } catch (e) {
       throw new Error("AI response parse nahi ho saka. Dobara try karein.");
     }
 
     if (!parsed.products || !parsed.products.length)
-      throw new Error("Product data nahi mila. Koi aur product URL try karein.");
+      throw new Error("Product data nahi mila. Koi aur URL try karein.");
 
     productQuery = parsed.searchQuery || parsed.detectedProduct || "product";
     allProducts = (parsed.products || []).map(p => ({
@@ -893,20 +898,17 @@ Source platform: ${detectSource(url)}`;
     const rawMsg = err.message || "Unknown error";
     let msg;
 
-    if (rawMsg.includes("API_KEY_INVALID") || rawMsg.includes("API key not valid") || rawMsg.includes("invalid API key")) {
+    if (rawMsg.includes("401") || rawMsg.includes("invalid_api_key") || rawMsg.includes("Invalid API Key")) {
       msg = `⚠️ <strong>API Key galat hai.</strong><br>
-        <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">aistudio.google.com</a> se sahi key copy karein aur <code>GEMINI_API_KEY</code> mein daalen.`;
-    } else if (rawMsg.includes("RESOURCE_EXHAUSTED") || rawMsg.includes("quota exceeded")) {
-      msg = `⚠️ <strong>Daily quota khatam ho gayi.</strong><br>
-        Free tier limit 1500 requests/day hai. Kal dobara try karein ya
-        <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">naya Google account</a> banakar new API key lo.`;
-    } else if (rawMsg.includes("not found") || rawMsg.includes("not supported")) {
-      msg = `⚠️ <strong>Model error.</strong><br>Raw error: ${rawMsg}<br>
-        <a href="https://aistudio.google.com" target="_blank" style="color:#e47911">aistudio.google.com</a> par jaake check karein ki aapka account active hai.`;
-    } else if (rawMsg.includes("Failed to fetch") || rawMsg.includes("NetworkError") || rawMsg.includes("network")) {
-      msg = "⚠️ <strong>Network error.</strong> Internet connection check karein aur dobara try karein.";
+        <a href="https://console.groq.com" target="_blank" style="color:#e47911">console.groq.com</a>
+        se sahi key copy karein aur <code>GROQ_API_KEY</code> mein daalen.`;
+    } else if (rawMsg.includes("429") || rawMsg.includes("rate_limit") || rawMsg.includes("Rate limit")) {
+      msg = `⚠️ <strong>Rate limit.</strong> Thodi der baad try karein.<br>
+        <small>Free tier: 30 req/min, 14,400 req/day</small>`;
+    } else if (rawMsg.includes("Failed to fetch") || rawMsg.includes("NetworkError")) {
+      msg = "⚠️ <strong>Network error.</strong> Internet connection check karein.";
     } else {
-      msg = `⚠️ <strong>Error aaya:</strong> ${rawMsg}<br><small style="color:#aaa">Agar ye baar baar aa raha hai toh API key dobara check karein.</small>`;
+      msg = `⚠️ <strong>Error:</strong> ${rawMsg}`;
     }
 
     eb.innerHTML = msg;
